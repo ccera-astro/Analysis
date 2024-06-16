@@ -18,6 +18,7 @@ def getArgs() :
     parser.add_argument("--DM",type=float,default=26.74,help="Dispersion measure.")
     parser.add_argument("--eps",type=float,default=3.0e-5,help="Period Scan Range")
     parser.add_argument("--down_sample",type=int,default=1,help="Down sample (averaging) factor")
+    parser.add_argument("--filter_plots",action="store_true",help="Enable plots related to noise filter.")
     parser.add_argument("--printPlot",action="store_true",help="Write plots to file.")
     parser.add_argument("--high_pass_off",action="store_true",help="Turn off high pass filter.")
     return parser.parse_args()
@@ -46,7 +47,7 @@ def downSample(x,n):
 
 #high pass filter
 def highpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5):
-    print("in highpass cutoff={0:f} sample_rate={1:f}".format(cutoff,sample_rate))
+    print("In highpass(): cutoff={0:f} sample_rate={1:f}".format(cutoff,sample_rate))
     sos = scipy.signal.butter(poles, cutoff, 'highpass', fs=sample_rate, output='sos')
     filtered_data = scipy.signal.sosfiltfilt(sos, data)
     return filtered_data
@@ -63,10 +64,8 @@ def denoise(array) :
     filtered_array = np.delete(array, indices)
     if True : 
         la, lf = len(array), len(filtered_array)
-        print("In denoise()")
-        print("p16={0:f} p50={1:f} sigma={2:f}".format(p16,p50,sigma))
-        print("len(array)={0:d} len(filtered_array)={1:d} fraction removed={2:.4f}%".format(
-        la,lf,100.*(la-lf)/float(la)))
+        print("In denoise(): p16={0:f} p50={1:f} sigma={2:f} fraction removed={3:.4f}%".format(
+            p16,p50,sigma,100.*(la-lf)/float(la)))
     return filtered_array, indices 
 
 def plotFilterHist(array, file, args=None) :
@@ -165,7 +164,7 @@ n_downsample = args.down_sample
 c_rate = f_sample/fft_size/n_decimate
 t_fft = 1./c_rate 
 c_rate /= n_downsample
-plot_filter_hist, plot_time_series = True, True  
+plot_filter_hist, plot_time_series = args.filter_plots, args.filter_plots 
 
 for i in [1,2] :
     file = base_name + "_{0:d}.raw".format(i)
