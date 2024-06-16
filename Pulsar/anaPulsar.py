@@ -182,13 +182,11 @@ for i in [1,2] :
 
     times = np.linspace(0.,nRows*t_fft,nRows) 
     times = downSample(times,n_downsample)
-    print("2 file={0:s}".format(file))
     if plot_filter_hist : plotFilterHist(power_time_series, file, args=args)
     if plot_time_series : plotTimeSeries(times, power_time_series, file, args=args)
 
     power_time_series, bad_elements = denoise(power_time_series)
     times = np.delete(times,bad_elements)
-    print("3 file={0:s}".format(file))
 
     fig, axs = plt.subplots(4, 2, figsize=(8,7))
     fig.suptitle("{0:s} {1:s} Period Scan: eps={2:.3e}".format(args.name,file.split('/')[-1],float(args.eps)), fontsize=16)
@@ -228,7 +226,6 @@ for i in [1,2] :
     else :
         plt.show()
 
-    print("4 file={0:s}".format(file))
     if sigma_mode :
         nPoints = len(best_sigma_array)
         x = np.linspace(0.,1.,nPoints)
@@ -248,7 +245,6 @@ for i in [1,2] :
             plt.savefig(plotFileName,format="png")
         else :
             plt.show()
-    print("4 file={0:s}".format(file))
  
 
 
