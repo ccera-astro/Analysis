@@ -2,18 +2,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
-import earthVelocity as eV
-import earthVelocityLookup as eVLU
-import galCoords 
 
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-p","--printLevel",type=int,help="Print level.")
+    parser.add_argument("-c","--channel",type=int,default=1,help="Radio channel (1 or 2)")
     parser.add_argument("-b","--base_name",default="./data/2024-06-15-1335",help="Base name of file to be analyzed.")
-    #parser.add_argument("--freqs",action='store_true',help="Use frequency for x axis.")
     parser.add_argument("-g","--gain_factor",type=float,default=66000.,help="Gain factor")
-    #parser.add_argument("--keepSpurs",action='store_true',help="Don't remove spurious peaks from spectrum.")
+    #parser.add_argument("-r","--removeSpurs",action='store_true',help="Remove spurious peaks from spectrum.")
     return parser.parse_args()
 
 def getMetaData(file) :
@@ -78,13 +75,13 @@ def fitBackground(vDoppler,power,n,vSignal) :
         if abs(vDoppler[i]) < vSignal : weights[i] = 1.e-6 
     series = np.polynomial.chebyshev.Chebyshev.fit(vDoppler, power, n, w=weights)
     background = series(vDoppler) 
-    #print("background={0:s}".format(str(background)))
     return background
 
 # Begin execution here
 
 args = getArgs()
-#gain = getGain(series) 
+chan = args.channel 
+gain = args.gain_factor 
 
 # get the first file to establish the parameters of the plot
 base_name = args.base_name 
@@ -94,19 +91,22 @@ print("freqs[0]={0:.2f} freqs[-1]={1:.2f}".format(freqs[0],freqs[-1]))
 vDoppler = getVelocities(freqs)
 
 scale2 = 0.6
-if True :
-    power1 = np.fromfile(base_name +"_1.avg", dtype=np.float32)
-    power2 = scale2*np.fromfile(base_name +"_2.avg", dtype=np.float32)
-    plt.plot(freqs,power1,'b-',label="Chan 1")
-    plt.plot(freqs,power2,'r-',label="Chan 2 x {0:.3f}".format(scale2))
-    plt.title("Raw spectrum no corrections: {0:s}".format(base_name))
+
+powers = [] 
+powers.append(gain*np.fromfile(base_name +"_1.avg", dtype=np.float32))
+powers.append(gain*scale2*np.fromfile(base_name +"_2.avg", dtype=np.float32))
+
+if True :    
+    plt.plot(freqs,powers[0],'b-',label="Chan 1")
+    plt.plot(freqs,powers[1],'r-',label="Chan 2 x {0:.3f}".format(scale2))
+    plt.title("Raw spectra: {0:s}".format(base_name))
     plt.xlabel("f (MHz)")
     plt.ylabel("PSD (AU)")
-    plt.ylim(0.,1.1*np.max(power1)) 
+    plt.ylim(0.,1.1*np.max(powers)) 
     plt.legend() 
     plt.show() 
 
-power = scale2*args.gain_factor*np.fromfile(base_name +"_2.avg", dtype=np.float32)
+power = powers[chan-1]
 
 vMin, vMax = -300., 300.
 i1 = np.searchsorted(vDoppler,vMin)
@@ -115,15 +115,20 @@ print("i1={0:d} i2={1:d}".format(i1,i2))
 freqs = freqs[i1:i2]
 vDoppler = vDoppler[i1:i2]
 power = power[i1:i2]
-background = fitBackground(vDoppler,power,3,200.)
-#gain = gain[i1:i2]
+background = fitBackground(vDoppler,power,3,150.)
 
+subtract_background = True 
+if subtract_background : 
+    plt.plot(vDoppler,power-background,'r.')
+    plt.plot([-300.,300.],[0., 0.],'g-')
+    yMax = np.max(power-background)
+    plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
+else :
+    plt.plot(vDoppler,power,'r.')
+    plt.plot(vDoppler,background,'g-')
+    yMax = np.max(power)
+    plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
 
-
-#plt.plot(vDoppler,power,'r.',label="Power")
-#plt.plot(vDoppler,background,'g-',label="3rd Order Chebyshev")
-plt.plot(vDoppler,power-background,'r.')
-plt.plot([-300.,300.],[0., 0.],'g-')
 plt.title("Spectrum with gain factor {0:s}".format(base_name))
 plt.xlabel('Doppler Velocity (km/s)')
 plt.ylabel('Power (K)')
