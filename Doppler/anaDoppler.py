@@ -2,13 +2,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+import socket
 
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-p","--printLevel",type=int,help="Print level.")
     parser.add_argument("-c","--channel",type=int,default=1,help="Radio channel (1 or 2)")
-    parser.add_argument("-b","--base_name",default="./data/2024-06-15-1335",help="Base name of file to be analyzed.")
+    parser.add_argument("--data_dir",default=None,help="data directory")
+    parser.add_argument("-b","--base_name",default="2024-06-13-1858",help="File(s) to be analyzed.")
     parser.add_argument("-g","--gain_factor",type=float,default=66000.,help="Gain factor")
     #parser.add_argument("-r","--removeSpurs",action='store_true',help="Remove spurious peaks from spectrum.")
     return parser.parse_args()
@@ -63,6 +65,14 @@ def subtractBackground(vDoppler,power) :
     power -= background
     return power
 
+def getFileName(args) :
+    if args.data_dir :
+        data_dir = args.data_dir 
+    else :
+        data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/Doppler/" 
+        if "receiver" in socket.gethostname().lower() : data_dir = "/home/dmarlow/data/"
+    return data_dir + args.base_name 
+
 def getFiles(args) :
     import glob
     return glob.glob('./data/{0:s}/{0:s}_???.dat'.format(args.series))
@@ -84,7 +94,7 @@ chan = args.channel
 gain = args.gain_factor 
 
 # get the first file to establish the parameters of the plot
-base_name = args.base_name 
+base_name = getFileName(args)
 meta_data = getMetaData(base_name + ".json")
 freqs = getFreqs(meta_data) 
 print("freqs[0]={0:.2f} freqs[-1]={1:.2f}".format(freqs[0],freqs[-1]))
@@ -99,7 +109,7 @@ powers.append(gain*scale2*np.fromfile(base_name +"_2.avg", dtype=np.float32))
 if True :    
     plt.plot(freqs,powers[0],'b-',label="Chan 1")
     plt.plot(freqs,powers[1],'r-',label="Chan 2 x {0:.3f}".format(scale2))
-    plt.title("Raw spectra: {0:s}".format(base_name))
+    plt.title("Raw spectra: {0:s}".format(base_name.split("/")[-1]))
     plt.xlabel("f (MHz)")
     plt.ylabel("PSD (AU)")
     plt.ylim(0.,1.1*np.max(powers)) 
@@ -129,7 +139,7 @@ else :
     yMax = np.max(power)
     plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
 
-plt.title("Spectrum with gain factor {0:s}".format(base_name))
+plt.title("Spectrum with gain factor {0:s}".format(base_name.split("/")[-1]))
 plt.xlabel('Doppler Velocity (km/s)')
 plt.ylabel('Power (K)')
 plt.legend() 
