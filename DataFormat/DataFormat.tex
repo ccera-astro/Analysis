@@ -14,7 +14,7 @@
 
 \begin{document}
 %\input ../../macros/banner.tex
-\rightline{V2.0~~\today}
+\rightline{V2.1~~\today}
 \bigskip
 \bigskip
 \bigskip
@@ -62,8 +62,10 @@ In this note, we propose a data format that will accomodate all or nearly all mo
  can be omitted if only a single channel is recorded.    
  
  \subsection{Data}
-All data sets can be represented as a time series.  Each element of the series is either a single value or a power spectral density array.     The length of the time series ($N_{\rm samples}$) can range from 1 to a very large number, limited only by the maximum file size (4GB?).   The spectral data take the form of a power spectral density (PSD) array (also called a ``filter bank'' array) having a variable number of bins ($N_{\rm bins}$) lying in the range $ 1 < N_{\rm bins} < 2^N$.   In principle, $N$ is unlimited but in practice will generally lie in the range $5 < N < 16$. 
+All data sets can be represented as a time series.  Each element of the series is either a single value or a power spectral density array.     The length of the time series ({\tt n\_samples}) can range from 1 to a very large number, limited only by the maximum file size (4GB?).   The spectral data take the form of a power spectral density (PSD) array (also called a ``filter bank'' array) having a variable number of bins ($N_{\rm bins}$) lying in the range $ 1 < N_{\rm bins} < 2^N$.   In principle, $N$ is unlimited but in practice will generally lie in the range $5 < N < 16$. 
 Each PSD element takes the format of a 32-bit floating point number.  
+
+
 
 
 % It is convenient to read and write binary data using the numpy ``{\tt .npz}'' format.   See URLs   \url{https://numpy.org/doc/stable/reference/generated/numpy.savez.html } and \url{https://numpy.org/doc/stable/reference/generated/numpy.load.html} as well as related help pages.
@@ -113,22 +115,32 @@ alt                & float  & azimuth of telescope at beginning of run in degree
  \hline 
  Name & Type & Meaning \\
  \hline  \hline
+run\_time & float & Run time in seconds \\
 target      & string   & Astronomical object---e.g. ``Sun'' or ``M31''  \\
 comment & string & text comment \\
 observatory & string & Observatory name---e.g., ``Carp'' \\
+run\_mode & string & Run mode---e.g., pulsar, doppler, or generic \\
+RA & float & Right ascension in degrees \\
+dec & float & Declination in degrees \\
+gLat & float & Galactic latitude in degrees \\
+gLon & float & Galactic longitude in degrees \\
+
 \hline
 \end{tabular}
 \end{center}
 \end{table}
  
 
+\subsection{Reduced Data Formats}
 
+The {\tt .raw} data format is illustrated in Fig.~\ref{FIG:format}.    Although the {\tt .raw} format contains a lot of information, the files can be inconveniently large.   In many cases, one is only interested in either a time series or a spectrum.    For example, for pulsar work at high frequencies, dispersion is often a small effect and only the time series is of interest.   In such cases, the size of the data can be reduced dramatically by summing all of the FFT bins for a given time slice into a single number.   The resulting   file, which is a simple time series,  has the extension {\tt .sum}\footnote{A possible future enhancement is a {\tt .ddsp} format, which is a de-dispersed time series.}   In other cases, only the spectral information is of interest and the size of the files can be reduced by averaging the time spectra for all time slices into a single array.    The resulting file, which is a single spectrum,  has the extension {\tt .avg}.  
 
-%\begin{figure}[htbp]
-%\centerline{\includegraphics[width=5in]{Readout.pdf}}
-%\caption{Readout circuit for directional position sensor.}
-%\label{FIG2}
-%\end{figure}
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=5in]{Array.pdf}}
+\caption{Graphic depiction of {\tt .raw} data format and the reduced data formats {\tt .avg} and {\tt .raw}. }
+ 
+\label{FIG:format}
+\end{figure}
 
 
 
