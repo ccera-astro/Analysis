@@ -42,7 +42,8 @@ for file in files :
     metadata = getMetaData(file)
     try : line += metadata['run_mode'] + ", "
     except KeyError : line += "Unknown, "
-    line += metadata['target'] + ", "
+    try : line += metadata['target'] + ", "
+    except KeyError : line += "Unknown, "
     line += metadata['run_type'] + ", "
     line += "{0:d}, ".format(metadata['fft_size']) 
     line += "{0:.6f}, ".format(float(metadata['t_sample']))
