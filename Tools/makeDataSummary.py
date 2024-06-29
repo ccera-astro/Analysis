@@ -47,6 +47,8 @@ for file in files :
     try : line += metadata['target'] + ", "
     except KeyError : line += "Unknown, "
     line += metadata['run_type'] + ", "
+    try : line += "{0:.1f}, ".format(metadata['run_time'])
+    except KeyError :  line += "Unknown, "
     line += "{0:d}, ".format(metadata['fft_size']) 
     line += "{0:.3f}, ".format(1000.*float(metadata['t_sample']))
     line += "{0:.1f}, ".format(1.e-6*float(metadata['freq']))
