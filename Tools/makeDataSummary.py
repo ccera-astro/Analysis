@@ -35,7 +35,7 @@ print("data_dir={0:s}".format(data_dir))
 files = glob.glob(data_dir + "*.json")
 print("files={0:s}".format(str(files)))
 
-outLines = [] 
+outLines = [" file, mode, target, type, fft_size, t_sample, freq, srate \n"]
 for file in files :
     print("Reading file={0:s}".format(file))
     line = file.split('/')[-1] + ", "
