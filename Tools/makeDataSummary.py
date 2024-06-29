@@ -31,7 +31,9 @@ else :
     data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/Scan/" 
     if "receiver" in socket.gethostname().lower() : data_dir = "/home/dmarlow/data/"
 
-files = glob.glob(data_dir + "*.json").sort() 
+print("data_dir={0:s}".format(data_dir))
+files = glob.glob(data_dir + "*.json")
+print("files={0:s}".format(str(files)))
 
 outLines = [] 
 for file in files :
