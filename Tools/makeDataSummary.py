@@ -18,7 +18,7 @@ def getMetaData(file) :
     import json
     with open(file) as json_file:
         dict = json.load(json_file)
-        print("From file {0:s} \nread dictionary={1:s}".format(file,str(dict)))
+        #print("From file {0:s} \nread dictionary={1:s}".format(file,str(dict)))
     return dict 
 
 # begin execution
@@ -37,6 +37,7 @@ print("files={0:s}".format(str(files)))
 
 outLines = [] 
 for file in files :
+    print("Reading file={0:s}".format(file))
     line = file.split('/')[-1]
     metadata = getMetaData(file)
     line += metadata['run_mode'] + ", "
