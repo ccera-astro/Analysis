@@ -42,7 +42,7 @@ for file in files :
     line += metadata['run_mode'] + ", "
     line += metadata['target'] + ", "
     line += metadata['run_type'] + ", "
-    line += metadata['fft_size'] + ", "
+    line += "{0:d}, ".format(metadata['fft_size']) 
     line += "{0:.6f}, ".format(float(metadata['t_sample']))
     line += "{0:.1f}, ".format(1.e-6*float(metadata['freq']))
     line += "{0:.3f}, ".format(1.e-6*float(metadata['srate']))
