@@ -35,11 +35,12 @@ print("data_dir={0:s}".format(data_dir))
 files = glob.glob(data_dir + "*.json")
 files =sorted(files,reverse=True)  
 
-print("files={0:s}".format(str(files)))
+#print("files={0:s}".format(str(files)))
+print("Number of files = {0:d}".format(len(files)))
 
-outLines = [" file, mode, target, type, fft_size, t_sample (ms), freq (MHz), srate (MHz) \n"]
+outLines = [" file, mode, target, type, run_time (s), fft_size, t_sample (ms), freq (MHz), srate (MHz) \n"]
 for file in files :
-    print("Reading file={0:s}".format(file))
+    #print("Reading file={0:s}".format(file))
     line = file.split('/')[-1].strip(".json") + ", "
     metadata = getMetaData(file)
     try : line += metadata['run_mode'] + ", "
@@ -48,7 +49,7 @@ for file in files :
     except KeyError : line += "Unknown, "
     line += metadata['run_type'] + ", "
     try : line += "{0:.1f}, ".format(metadata['run_time'])
-    except KeyError :  line += "Unknown, "
+    except KeyError :  line += "0., "
     line += "{0:d}, ".format(metadata['fft_size']) 
     line += "{0:.3f}, ".format(1000.*float(metadata['t_sample']))
     line += "{0:.1f}, ".format(1.e-6*float(metadata['freq']))
