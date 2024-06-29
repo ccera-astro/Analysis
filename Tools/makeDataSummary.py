@@ -33,6 +33,8 @@ else :
 
 print("data_dir={0:s}".format(data_dir))
 files = glob.glob(data_dir + "*.json")
+files =sorted(files,reverse=True)  
+
 print("files={0:s}".format(str(files)))
 
 outLines = [" file, mode, target, type, fft_size, t_sample, freq, srate \n"]
