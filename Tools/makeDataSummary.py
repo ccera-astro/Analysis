@@ -40,7 +40,8 @@ for file in files :
     print("Reading file={0:s}".format(file))
     line = file.split('/')[-1]
     metadata = getMetaData(file)
-    line += metadata['run_mode'] + ", "
+    try : line += metadata['run_mode'] + ", "
+    except KeyError : line += "Unknown, "
     line += metadata['target'] + ", "
     line += metadata['run_type'] + ", "
     line += "{0:d}, ".format(metadata['fft_size']) 
