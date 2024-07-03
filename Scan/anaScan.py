@@ -41,7 +41,7 @@ def getObserver() :
     return carp 
 
 def airy(mean_time, base_temp, peak_temp, width) : 
-    times = np.linspace(mean_time-500.,mean_time+500.,200)
+    times = np.linspace(mean_time-700.,mean_time+700.,200)
     airy_function = [] 
     for tt in times :
         r = (tt-mean_time)/width 
@@ -107,10 +107,17 @@ else :
     calibration_factor = 17.5
     power *= calibration_factor 
 
-mean_time = {'06-25':3620, '06-27':3622, '06-29':3620, '06-30':3610., '07-01':3610. }
-base_temp = {'06-25':89., '06-27':93.5, '06-29':94., '06-30':92.9, '07-01': 94.}
-peak_temp = {'06-25':20.6, '06-27':21.3, '06-29':22., '06-30':22., '07-01': 22.} 
-width = {'06-25':370., '06-27':370., '06-29':370., '06-30':370., '07-01': 370.} 
+if metadata['target'] == 'CygnusA' :
+    mean_time = {'06-25':3620, '06-27':3622, '06-29':3620, '06-30':3610., '07-01':3610. }
+    base_temp = {'06-25':89., '06-27':93.5, '06-29':94., '06-30':92.9, '07-01': 94.}
+    peak_temp = {'06-25':20.6, '06-27':21.3, '06-29':22., '06-30':22., '07-01': 22.} 
+    width = {'06-25':370., '06-27':370., '06-29':370., '06-30':370., '07-01': 370.} 
+else :
+    mean_time = {'07-02':3227. }
+    base_temp = {'07-02': 94.}
+    peak_temp = {'07-02': 15050.} 
+    width = {'07-02': 310.} 
+
 airy_times, airy_function = airy(mean_time[day], base_temp[day], peak_temp[day], width[day])
 max_gmt = metadata['t_start'] + mean_time[day] 
 
@@ -123,8 +130,9 @@ if x310 : gain_inverse = np.divide(90.*np.ones(nVals,dtype=np.float32),gain)
 plt.plot(times,power,'b-',label="Chan 2")
 plt.plot(airy_times,airy_function,'r-') 
 ts = datetime.fromtimestamp(max_gmt).strftime('%Y-%m-%d %H:%M:%S')
-plt.text(100.,115.,'Peak={0:s}'.format(ts))
-plt.text(100,112.,'Width={0:.2f} deg.'.format(dPhi))
+yMin, yMax = 80., np.max(power)
+plt.text(100.,yMin + 0.9*(yMax-yMin),'Peak={0:s}'.format(ts))
+plt.text(100,yMin+0.8*(yMax-yMin),'Width={0:.2f} deg.'.format(dPhi))
 plt.title("Power vs. Time  {0:s}".format(base_name.split("/")[-1]))
 plt.xlabel("t (s)")
 plt.ylabel("Power (K)")
