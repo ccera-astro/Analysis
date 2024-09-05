@@ -11,7 +11,6 @@ def getArgs() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-p","--printLevel",type=int,help="Print level.")
     parser.add_argument("--data_dir",default=None,help="data directory")
-    #parser.add_argument("-f","--fileName",default="../data/J0332+5434/20240605.raw",help="File(s) to be analyzed.")
     parser.add_argument("-b","--base_name",default="2024-06-13-1858",help="File(s) to be analyzed.")
     parser.add_argument("-n","--name",default="J0332+5434",help="Pulsar to be analyzed.")
     parser.add_argument("--p0",type=float,default=0.7145196,help="Period in s.")
@@ -21,6 +20,7 @@ def getArgs() :
     parser.add_argument("--filter_plots",action="store_true",help="Enable plots related to noise filter.")
     parser.add_argument("--printPlot",action="store_true",help="Write plots to file.")
     parser.add_argument("--high_pass_off",action="store_true",help="Turn off high pass filter.")
+    parser.add_argument("-r","--raw",action="store_true",help="Read raw data file.")
     return parser.parse_args()
 
 def getFileName(args) :
@@ -40,10 +40,17 @@ def getData(file,fft_size) :
     return vals, rows, cols
 
 # average every n elements 
-def downSample(x,n): 
-    m = len(x) % n  
-    if m > 0 : x = x[:-m]
-    return np.mean(x.reshape(-1,n), axis=1)
+#def downSample(x,n): 
+#    m = len(x) % n  
+#    if m > 0 : x = x[:-m]
+#    return np.mean(x.reshape(-1,n), axis=1)
+def downSample(x,n):
+    nIn = len(x)
+    nOut = int(nIn/n)
+    print("In downsample: nIn={0:d} nOut={1:d} nOut*n={2:d}".format(nIn,nOut,n*nOut))
+    y = np.zeros(nOut)  
+    for j in range(nOut) : y[j] = np.sum(x[j*n:(j+2)*n])
+    return y
 
 #high pass filter
 def highpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5):
@@ -55,7 +62,6 @@ def highpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5
 # use lower tail to estimate mean and sigma and the remove samples
 # that are more than 5 sigma above the mean 
 def denoise(array) :
-    
     p16 = np.percentile(array, 16)
     p50 = np.percentile(array, 50)
     sigma = p50 - p16
@@ -167,20 +173,27 @@ c_rate /= n_downsample
 plot_filter_hist, plot_time_series = args.filter_plots, args.filter_plots 
 
 for i in [1,2] :
-    file = base_name + "_{0:d}.raw".format(i)
-    data, nRows, nCols = getData(file,fft_size)
-    print("Read {0:d} {1:d} spectra from {2:s}".format(nRows,nCols,file))
+    if args.raw :
+        file = base_name + "_{0:d}.raw".format(i)
+        print("Reading raw data file: {0:s}".format(file))
+        data, nRows, nCols = getData(file,fft_size)
+        print("Read {0:d} {1:d} spectra from {2:s}".format(nRows,nCols,file))
+        power_time_series = 1000.*np.sum(data,1) 
+    else :
+        file = base_name + "_{0:d}.sum".format(i)
+        power_time_series = 1000*np.fromfile(file, dtype=np.float32)
+        
 
-    power_time_series = 1000.*np.sum(data,1) 
-    power_time_series = downSample(power_time_series,n_downsample)
+    if n_downsample > 1 : power_time_series = downSample(power_time_series,n_downsample)
+    nRows = len(power_time_series) 
 
     if not args.high_pass_off :
         # apply a high pass filter to mitigate baseline wandering
         f_cutoff = 0.1
         power_time_series = highpass(power_time_series,f_cutoff,c_rate)
 
-    times = np.linspace(0.,nRows*t_fft,nRows) 
-    times = downSample(times,n_downsample)
+    times = np.linspace(0.,nRows*t_fft*n_downsample,nRows) 
+
     if plot_filter_hist : plotFilterHist(power_time_series, file, args=args)
     if plot_time_series : plotTimeSeries(times, power_time_series, file, args=args)
 
@@ -190,7 +203,7 @@ for i in [1,2] :
     fig, axs = plt.subplots(4, 2, figsize=(8,7))
     fig.suptitle("{0:s} {1:s} Period Scan: eps={2:.3e}".format(args.name,file.split('/')[-1],float(args.eps)), fontsize=16)
 
-    nBins = 100
+    nBins = 50
     periods = np.linspace(args.p0*(1.-args.eps),args.p0*(1.+args.eps),8)
 
     sigma_mode, best_sigma = True, 0. 
@@ -243,6 +256,7 @@ for i in [1,2] :
             plotFileName = "./plots/BestSigma_{0:s}.png".format(getDay(args))
             plt.savefig(plotFileName,format="png")
         else :
+            #print("vals={0:s}".format(str(best_sigma_array)))
             plt.show()
  
 
