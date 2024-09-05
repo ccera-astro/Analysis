@@ -49,7 +49,7 @@ def downSample(x,n):
     nOut = int(nIn/n)
     print("In downsample: nIn={0:d} nOut={1:d} nOut*n={2:d}".format(nIn,nOut,n*nOut))
     y = np.zeros(nOut)  
-    for j in range(nOut) : y[j] = np.sum(x[j*n:(j+2)*n])
+    for j in range(nOut) : y[j] = np.sum(x[j*n:(j+1)*n])
     return y
 
 #high pass filter
