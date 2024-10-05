@@ -13,10 +13,10 @@ def getArgs() :
     parser.add_argument("--data_dir",default=None,help="data directory")
     parser.add_argument("-b","--base_name",default="2024-06-13-1858",help="File(s) to be analyzed.")
     parser.add_argument("-n","--name",default="J0332+5434",help="Pulsar to be analyzed.")
-    parser.add_argument("--p0",type=float,default=0.7145196,help="Period in s.")
+    parser.add_argument("--p0",type=float,default=0.,help="Period in s.")
     parser.add_argument("--DM",type=float,default=26.74,help="Dispersion measure.")
     parser.add_argument("--eps",type=float,default=3.0e-5,help="Period Scan Range")
-    parser.add_argument("--down_sample",type=int,default=1,help="Down sample (averaging) factor")
+    parser.add_argument("--down_sample",type=int,default=4,help="Down sample (averaging) factor")
     parser.add_argument("--filter_plots",action="store_true",help="Enable plots related to noise filter.")
     parser.add_argument("--printPlot",action="store_true",help="Write plots to file.")
     parser.add_argument("--high_pass_off",action="store_true",help="Turn off high pass filter.")
@@ -28,6 +28,7 @@ def getFileName(args) :
         data_dir = args.data_dir 
     else :
         data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/J0332+5434/" 
+        data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/" 
         if "receiver" in socket.gethostname().lower() : data_dir = "/home/dmarlow/data/"
     return data_dir + args.base_name 
 
@@ -39,22 +40,16 @@ def getData(file,fft_size) :
     vals = np.reshape(vals, (rows,cols))   
     return vals, rows, cols
 
-# average every n elements 
-#def downSample(x,n): 
-#    m = len(x) % n  
-#    if m > 0 : x = x[:-m]
-#    return np.mean(x.reshape(-1,n), axis=1)
 def downSample(x,n):
     nIn = len(x)
     nOut = int(nIn/n)
-    print("In downsample: nIn={0:d} nOut={1:d} nOut*n={2:d}".format(nIn,nOut,n*nOut))
+    print("In downsample(): nIn={0:d} nOut={1:d} nOut*n={2:d}".format(nIn,nOut,n*nOut))
     y = np.zeros(nOut)  
     for j in range(nOut) : y[j] = np.sum(x[j*n:(j+1)*n])
     return y
 
-#high pass filter
 def highpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5):
-    print("In highpass(): cutoff={0:f} sample_rate={1:f}".format(cutoff,sample_rate))
+    print("In   highpass(): cutoff={0:f} sample_rate={1:f}".format(cutoff,sample_rate))
     sos = scipy.signal.butter(poles, cutoff, 'highpass', fs=sample_rate, output='sos')
     filtered_data = scipy.signal.sosfiltfilt(sos, data)
     return filtered_data
@@ -70,7 +65,7 @@ def denoise(array) :
     filtered_array = np.delete(array, indices)
     if True : 
         la, lf = len(array), len(filtered_array)
-        print("In denoise(): p16={0:f} p50={1:f} sigma={2:f} fraction removed={3:.4f}%".format(
+        print("In    denoise(): p16={0:f} p50={1:f} sigma={2:f} fraction removed={3:.4f}%".format(
             p16,p50,sigma,100.*(la-lf)/float(la)))
     return filtered_array, indices 
 
@@ -172,41 +167,48 @@ t_fft = 1./c_rate
 c_rate /= n_downsample
 plot_filter_hist, plot_time_series = args.filter_plots, args.filter_plots 
 
-for i in [1,2] :
-    if args.raw :
-        file = base_name + "_{0:d}.raw".format(i)
-        print("Reading raw data file: {0:s}".format(file))
-        data, nRows, nCols = getData(file,fft_size)
-        print("Read {0:d} {1:d} spectra from {2:s}".format(nRows,nCols,file))
-        power_time_series = 1000.*np.sum(data,1) 
-    else :
-        file = base_name + "_{0:d}.sum".format(i)
-        power_time_series = 1000*np.fromfile(file, dtype=np.float32)
-        
+# calculate expected p0 based on pulsar name and vLSR
 
-    if n_downsample > 1 : power_time_series = downSample(power_time_series,n_downsample)
-    nRows = len(power_time_series) 
+c = 3.0e5 
+pname = metadata['target']
+p0 = args.p0 
+if pname.lower() == 'j0332+5434' :   p0 = 0.714519699726*(1. - metadata['vlsr']/c) 
+elif pname.lower() == 'j0953+0755' : p0 = 0.253065164948*(1. - metadata['vlsr']/c)
+print("Pulsar={0:s} vLSR/c={1:.2e} p0={2:.6f}".format(metadata['target'],metadata['vlsr']/c,p0))
 
-    if not args.high_pass_off :
-        # apply a high pass filter to mitigate baseline wandering
-        f_cutoff = 0.1
-        power_time_series = highpass(power_time_series,f_cutoff,c_rate)
+pts_1 = 1000*np.fromfile(base_name + "_1.sum", dtype=np.float32)
+pts_2 = 1000*np.fromfile(base_name + "_2.sum", dtype=np.float32)
+if len(pts_1) > len(pts_2) : pts_1 = pts_1[:len(pts_2)]
+if len(pts_2) > len(pts_1) : pts_2 = pts_2[:len(pts_1)]
+power_time_series = pts_1 + pts_2 
 
-    times = np.linspace(0.,nRows*t_fft*n_downsample,nRows) 
+if n_downsample > 1 : power_time_series = downSample(power_time_series,n_downsample)
+nRows = len(power_time_series) 
 
-    if plot_filter_hist : plotFilterHist(power_time_series, file, args=args)
-    if plot_time_series : plotTimeSeries(times, power_time_series, file, args=args)
+if not args.high_pass_off :
+    # apply a high pass filter to mitigate baseline wandering
+    f_cutoff = 0.1
+    power_time_series = highpass(power_time_series,f_cutoff,c_rate)
 
-    power_time_series, bad_elements = denoise(power_time_series)
-    times = np.delete(times,bad_elements)
+times = np.linspace(0.,nRows*t_fft*n_downsample,nRows) 
 
+if plot_filter_hist : plotFilterHist(power_time_series, file, args=args)
+if plot_time_series : plotTimeSeries(times, power_time_series, file, args=args)
+
+power_time_series, bad_elements = denoise(power_time_series)
+times = np.delete(times,bad_elements)
+
+nBins = 50
+sigma_mode, scan_mode = True, args.p0 > 0.  
+if not scan_mode :
+    phase_hist = detectSignal(times, power_time_series, p0, nBins = nBins)        
+    best_sigma_array = getSigmaArray(phase_hist)
+    best_period = p0 
+else : 
     fig, axs = plt.subplots(4, 2, figsize=(8,7))
-    fig.suptitle("{0:s} {1:s} Period Scan: eps={2:.3e}".format(args.name,file.split('/')[-1],float(args.eps)), fontsize=16)
-
-    nBins = 50
-    periods = np.linspace(args.p0*(1.-args.eps),args.p0*(1.+args.eps),8)
-
-    sigma_mode, best_sigma = True, 0. 
+    fig.suptitle("{0:s} {1:s} Period Scan: eps={2:.3e}".format(args.name,args.base_name,float(args.eps)), fontsize=16)
+    periods = np.linspace(p0*(1.-args.eps),p0*(1.+args.eps),8)
+    best_sigma = 0. 
     for i, period in enumerate(periods) :
         phase_hist = detectSignal(times, power_time_series, period, nBins = nBins)        
         sigma_array = getSigmaArray(phase_hist)
@@ -238,27 +240,38 @@ for i in [1,2] :
     else :
         plt.show()
 
-    if sigma_mode :
-        nPoints = len(best_sigma_array)
-        x = np.linspace(0.,1.,nPoints)
-        x_err = np.zeros_like(x)
-        y_err = np.ones_like(best_sigma_array)
-        fig2, axs2 = plt.subplots(figsize=(8,7))
-        fig2.suptitle("{0:s} {1:s} Best Period={2:.3f} (ms)".format(args.name,file.split('/')[-1],1000.*best_period), fontsize=16)
-        axs2.errorbar(x,best_sigma_array,xerr=x_err,yerr=y_err,color='red',ecolor='black',fmt='o')
-        plt.xlabel("Phase",fontsize=16)
-        plt.ylabel("Signal/Noise",fontsize=16)
-        bs = max(best_sigma_array)
-        plt.text(0.1,0.8*bs,'Best sigma={0:.2f}'.format(bs))
-        axs2.plot([0.,1.],[0.,0.],'k--')
-        axs2.set_xlim(0.,1.)
-        if False and args.printPlot :  
-            plotFileName = "./plots/BestSigma_{0:s}.png".format(getDay(args))
-            plt.savefig(plotFileName,format="png")
-        else :
-            #print("vals={0:s}".format(str(best_sigma_array)))
-            plt.show()
- 
+if sigma_mode :
+    nPoints = len(best_sigma_array)
+    # roll array to put peak in center 
+    r = int(nPoints/2) - np.argmax(best_sigma_array) 
+    print("roll={0:d}".format(r))
+    best_sigma_array = np.roll(best_sigma_array,r)
+    x = np.linspace(0.,1.,nPoints)
+    x_err = np.zeros_like(x)
+    y_err = np.ones_like(best_sigma_array)
+    fig2, axs2 = plt.subplots(figsize=(8,7))
+    fig2.suptitle("{0:s}".format(args.base_name, fontsize=14))
+    axs2.errorbar(x,best_sigma_array,xerr=x_err,yerr=y_err,color='red',ecolor='black',fmt='o')
+    plt.xlabel("Phase",fontsize=16)
+    plt.ylabel("Signal/Noise",fontsize=16)
+    bs = max(best_sigma_array)
+    ymin, ymax = plt.ylim() 
+    dy = ymax - ymin 
+    if scan_mode :
+        plt.text(0.05,0.89*dy+ymin,'Scan mode ' + metadata['target'] ,fontsize=14) 
+        plt.text(0.05,0.83*dy+ymin,"Best period={0:.3f} ms".format(1000.*best_period),fontsize=14)
+        plt.text(0.05,0.77*dy+ymin,'Best sigma={0:.2f}'.format(bs),fontsize=14)
+    else :
+        plt.text(0.05,0.95*dy+ymin,'vLSR mode ' + metadata['target'],fontsize=14)
+        plt.text(0.05,0.89*dy+ymin,"Period={0:.3f} ms".format(1000.*best_period),fontsize=14)
+        plt.text(0.05,0.83*dy+ymin,'Sigma={0:.2f}'.format(dy),fontsize=14)
+        plt.text(0.05,0.77*dy+ymin,"vLSR={0:.2f} km/s".format(metadata['vlsr']),fontsize=14)
+    plt.text(0.05,0.71*dy+ymin,'Az={0:.1f} Alt={1:.1f}'.format(metadata['az'],metadata['alt']),fontsize=14)
+    
+    axs2.plot([0.,1.],[0.,0.],'k--')
+    axs2.set_xlim(0.,1.)
+    plt.show()
+
 
 
 
