@@ -5,27 +5,14 @@ import scipy.signal
 import matplotlib.pyplot as plt 
 import socket 
 import json 
-import runPolyco as rp 
+import runtempo as rt
 import scipy.stats as stats
 
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p","--printLevel",type=int,help="Print level.")
     parser.add_argument("--data_dir",default=None,help="data directory")
     parser.add_argument("-b","--base_name",default="2024-06-13-1858",help="File(s) to be analyzed.")
-    parser.add_argument("-n","--name",default="J0332+5434",help="Pulsar to be analyzed.")
-    parser.add_argument("-m","--mode",default="polyco",help="Analysis mode (polyco or scan)")
-    parser.add_argument("--p0",type=float,default=0.,help="Period in s.")
-    parser.add_argument("--nPhaseBins",type=int,default=50,help="Number of bins in phase plot")
-    parser.add_argument("--nPeriods",type=int,default=100,help="Number of trial periods")
-    parser.add_argument("--no_roll",action="store_true",help="Disable roll")
-    parser.add_argument("--power_mode",action="store_true",help="Plot power values")
-    parser.add_argument("--eps",type=float,default=2.0e-4,help="Period Scan Range")
-    parser.add_argument("--down_sample",type=int,default=1,help="Down sample (averaging) factor")
-    parser.add_argument("--filter_plots",action="store_true",help="Enable plots related to noise filter.")
-    parser.add_argument("--printPlot",action="store_true",help="Write plots to file.")
-    parser.add_argument("--high_pass_off",action="store_true",help="Turn off high pass filter.")
     parser.add_argument("-r","--raw",action="store_true",help="Read raw data file.")
     return parser.parse_args()
 
@@ -177,7 +164,6 @@ args = getArgs()
 
 day = args.base_name 
 base_name = getFileName(args)
-mode = args.mode 
 
 with open(base_name + ".json") as json_file : metadata = json.load(json_file)
 
@@ -187,24 +173,9 @@ fft_size = metadata['fft_size']
 freq = 1.0e-6*metadata['freq']
 try : n_decimate = metadata['decimation_factor']
 except KeyError : n_decimate = 250 
-n_downsample = args.down_sample 
 c_rate = f_sample/fft_size/n_decimate
 t_fft = 1./c_rate 
-c_rate /= n_downsample
-plot_filter_hist, plot_time_series = args.filter_plots, args.filter_plots 
 
-pname = metadata['target']
-nBins = args.nPhaseBins 
-sigma_mode = not args.power_mode  
-
-if mode == "scan" : 
-    n_downsample = 4 
-    p0 = args.p0  
-    if not args.p0 > 0. :
-        if pname.lower() == 'j0332+5434' : p0 = 0.714519699726
-        elif pname.lower() == 'j0953+0755' : p0 = 0.253065164948
-    print("Pulsar={0:s} p0={1:.6f}".format(metadata['target'],p0))
-    
 # set up time series 
 pts_1 = 1000*np.fromfile(base_name + "_1.sum", dtype=np.float32)
 pts_2 = 1000*np.fromfile(base_name + "_2.sum", dtype=np.float32)
@@ -212,118 +183,14 @@ if len(pts_1) > len(pts_2) : pts_1 = pts_1[:len(pts_2)]
 if len(pts_2) > len(pts_1) : pts_2 = pts_2[:len(pts_1)]
 power_time_series = pts_1 + pts_2 
 
-if n_downsample > 1 : power_time_series = downSample(power_time_series,n_downsample)
 nRows = len(power_time_series) 
-
-if not args.high_pass_off :
-    # apply a high pass filter to mitigate baseline wandering
-    f_cutoff = 0.1
-    power_time_series = highpass(power_time_series,f_cutoff,c_rate)
-
-times = np.linspace(0.,nRows*t_fft*n_downsample,nRows) 
-
-if plot_filter_hist : plotFilterHist(power_time_series, file, args=args)
-if plot_time_series : plotTimeSeries(times, power_time_series, file, args=args)
-
-power_time_series, bad_elements = denoise(power_time_series)
-times = np.delete(times,bad_elements)
-
-if mode == "polyco" :
-    MJD = (metadata['t_start'] / 86400.) + 40587. 
-    MJDs = MJD + times/86400. 
-    pulsarName = pname 
-    if pulsarName[0] == 'J' : pulsarName = pulsarName[1:]
-    coeff = rp.getpolycoeff(MJD, metadata, base_name)
-    print("MJD={0:f} coeff={1:s}".format(MJD,str(coeff)))
-    p0 = 1./coeff[4]
-    phase = time2phase(MJDs, coeff)
-    average_period = (times[-1]-times[0])/(phase[-1]-phase[0])
-    print("Average period={0:.4f} ms".format(1000.*average_period))
-    bdata, bnum = bindata(phase, power_time_series, nBins)
-    phase_hist = np.divide(bdata,bnum)
-else : 
-    print("In scan: p0={0:f}".format(p0))
-    nPeriods, nBins = args.nPeriods, args.nPhaseBins 
-    periods = np.linspace(p0*(1.-args.eps),p0*(1.+args.eps),nPeriods)
-    mapData = np.zeros((nPeriods,nBins))   
-    best_sigma = 0. 
-    for i, period in enumerate(periods) :
-        bdata, bnum = bindata(times/period, power_time_series, nBins)
-        phase_hist = np.divide(bdata,bnum)
-        sigma_array = getSigmaArray(phase_hist)
-        if not sigma_mode :
-            mapData[i] = phase_hist 
-        else :
-            mapData[i] = sigma_array 
-            this_sigma = np.max(sigma_array)
-            best_string = ""
-            if  this_sigma > best_sigma :
-                best_period = period 
-                best_sigma = np.max(sigma_array)
-                best_sigma_array = 1.001*sigma_array 
-                best_string = "**"
-                print("i={0:d} period={1:.4f} best_period={2:.4f} sigma={3:.3f} best_sigma={4:.3f}{5:s}".format(
-                    i,1000.*period,1000.*best_period,this_sigma,best_sigma,best_string))
-    
-    fig = plt.figure(figsize=(10.,7.5))
-    ax = fig.add_subplot(111)
-    ax.set_title("S/N: {0:s}  Best Period={1:.4f} ms".format(metadata['target'],1000.*best_period))
-    ax.patch.set_facecolor('white')
-    ax.set_xlabel("Phase",size=14)
-    ax.set_ylabel("Period (ms)",size=14)
-    eps = float(args.eps)
-    mapData = np.maximum(mapData,0.)
-    im = ax.imshow(mapData,extent=[0,1.,1000.*periods[-1],1000.*periods[0]],aspect='auto')
-    im.set_cmap('jet')
-    plt.colorbar(im, use_gridspec=True)
-    plt.show()
-
-if sigma_mode :
-    nPoints = len(phase_hist)
-    if mode in ['polyco','vlsr'] :
-        best_sigma_array = getSigmaArray(phase_hist)
-        nPoints = len(best_sigma_array)
-        best_period = p0
-
-    roll = 0 
-    if not args.no_roll :  
-        roll = int(nPoints/2) - np.argmax(best_sigma_array) 
-        print("roll={0:d}".format(roll))
-        best_sigma_array = np.roll(best_sigma_array,roll)
-    
-    x = np.linspace(0.,1.,nPoints)
-    x_err = np.zeros_like(x)
-    y_err = np.ones_like(best_sigma_array)
-    fig2, axs2 = plt.subplots(figsize=(8,7))
-    axs2.errorbar(x,best_sigma_array,xerr=x_err,yerr=y_err,color='red',ecolor='black',fmt='o')
-    plt.xlabel("Phase",fontsize=16)
-    plt.ylabel("Signal/Noise",fontsize=16)
-    plt.title("{0:s}".format(args.base_name, fontsize=14))
-    bs = max(best_sigma_array)
-    ymin, ymax = plt.ylim() 
-    dy = ymax - ymin 
-
-    if mode == "polyco" :
-        plt.text(0.05,0.89*dy+ymin,'Polyco mode ' + metadata['target'] ,fontsize=14) 
-        plt.text(0.05,0.83*dy+ymin,"Period={0:.4f} ms".format(1000.*average_period),fontsize=14)
-        plt.text(0.05,0.77*dy+ymin,'Sigma={0:.2f} Roll={1:d}'.format(bs,roll),fontsize=14)
-
-    elif mode == "scan" :
-        plt.text(0.05,0.89*dy+ymin,'Scan mode ' + metadata['target'] ,fontsize=14) 
-        plt.text(0.05,0.83*dy+ymin,"Best period={0:.4f} ms".format(1000.*best_period),fontsize=14)
-        plt.text(0.05,0.77*dy+ymin,'Best sigma={0:.2f} Roll={1:d}'.format(bs,roll),fontsize=14)
-
-    plt.text(0.05,0.71*dy+ymin,'Az={0:.1f} Alt={1:.1f}'.format(metadata['az'],metadata['alt']),fontsize=14)
-    
-    axs2.plot([0.,1.],[0.,0.],'k--')
-    axs2.set_xlim(0.,1.)
-    plt.show()
-
-
-
-
-
-
+times = np.linspace(0.,nRows*t_fft,nRows) 
+MJD = (metadata['t_start'] / 86400.) + 40587. 
+MJDs = MJD + times/86400. 
+startMJD, stopMJD = MJD, MJDs[-1]
+midMJD = 0.5*(startMJD + stopMJD)
+print("Pulsar:{0:s}".format(metadata['target']))
+print("MJD: start={0:f} stop={1:f} mid={2:f}".format(startMJD,stopMJD,midMJD))
 
 
 
