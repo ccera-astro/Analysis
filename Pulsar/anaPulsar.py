@@ -7,6 +7,7 @@ import socket
 import json 
 import runPolyco as rp 
 import scipy.stats as stats
+import time 
 
 def getArgs() :
     import argparse
@@ -15,8 +16,10 @@ def getArgs() :
     parser.add_argument("--data_dir",default=None,help="data directory")
     parser.add_argument("-b","--base_name",default="2024-06-13-1858",help="File(s) to be analyzed.")
     parser.add_argument("-n","--name",default="J0332+5434",help="Pulsar to be analyzed.")
-    parser.add_argument("-m","--mode",default="polyco",help="Analysis mode (polyco or scan)")
+    parser.add_argument("-m","--mode",default="polyco",help="Analysis mode (polyco, scan, or f0)")
     parser.add_argument("--p0",type=float,default=0.,help="Period in s.")
+    parser.add_argument("--f0",type=float,default=0.,help="Frequency in Hz.")
+    parser.add_argument("--phase0",type=float,default=0.,help="Reference phase.")
     parser.add_argument("--nPhaseBins",type=int,default=50,help="Number of bins in phase plot")
     parser.add_argument("--nPeriods",type=int,default=100,help="Number of trial periods")
     parser.add_argument("--no_roll",action="store_true",help="Disable roll")
@@ -26,6 +29,9 @@ def getArgs() :
     parser.add_argument("--filter_plots",action="store_true",help="Enable plots related to noise filter.")
     parser.add_argument("--printPlot",action="store_true",help="Write plots to file.")
     parser.add_argument("--high_pass_off",action="store_true",help="Turn off high pass filter.")
+    parser.add_argument("--middle_scan",action="store_true",help="Limit data to middle of transit scan.")
+    parser.add_argument("--gain",type=float,default=10.,help="Gain (K/counts)")
+    parser.add_argument("--no_plot",action="store_true",help="Don't show plots.")
     parser.add_argument("-r","--raw",action="store_true",help="Read raw data file.")
     return parser.parse_args()
 
@@ -52,6 +58,7 @@ def downSample(x,n):
     print("In downsample(): nIn={0:d} nOut={1:d} nOut*n={2:d}".format(nIn,nOut,n*nOut))
     y = np.zeros(nOut)  
     for j in range(nOut) : y[j] = np.sum(x[j*n:(j+1)*n])
+    y /= n 
     return y
 
 def highpass(data: np.ndarray, cutoff: float, sample_rate: float, poles: int = 5):
@@ -75,14 +82,14 @@ def denoise(array) :
             p16,p50,sigma,100.*(la-lf)/float(la)))
     return filtered_array, indices 
 
-def plotFilterHist(array, file, args=None) :
+def plotFilterHist(array, args=None) :
     p16 = np.percentile(array, 16)
     p50 = np.percentile(array, 50)
     sigma = p50 - p16
     threshold = p50 + 5.*sigma 
     hist, bins = np.histogram(array, bins=1000, range=(-1.,5.))
     plt.semilogy(bins[:-1], hist, label="All samples")
-    plt.title("Histogram for {0:s}".format(file.split('/')[-1]))
+    #plt.title("Histogram for {0:s}".format(file.split('/')[-1]))
     plt.xlabel("Value")
     plt.ylabel("Counts")
     filtered_array, dummy = denoise(array)
@@ -97,10 +104,10 @@ def plotFilterHist(array, file, args=None) :
         plt.savefig(plotFileName,format='png')
         plt.clf()
 
-def plotTimeSeries(times,array, file, args=None) :
+def plotTimeSeries(times,array, args=None) :
     plt.subplot() 
     plt.plot(times,array,'r-',label="All samples")
-    plt.title("Time Series for {0:s}".format(file.split('/')[-1]))
+    #plt.title("Time Series for {0:s}".format(file.split('/')[-1]))
     plt.xlabel("Time (s)")
     plt.ylabel("Sample Value")
     filtered_array, bad_elements = denoise(array)
@@ -114,18 +121,6 @@ def plotTimeSeries(times,array, file, args=None) :
         plt.savefig(plotFileName,format='png')
         plt.clf()
     
-def detectSignal(times, array, period, phase0 = 0., nBins = 128) :
-    hist_array, count_array = np.zeros(nBins), np.zeros(nBins)
-    times = times - phase0*period
-    print("times[0:10]={0:s} \nperiod={1:f}".format(str(times[0:10]),period))
-    for i, t in enumerate(times) :
-        tm = t % period 
-        j = int(nBins*tm/period) 
-        hist_array[j] += array[i]
-        count_array[j] += 1 
-    hist_array = np.divide(hist_array,count_array)
-    return hist_array 
-
 def getSigmaArray(x) :
     iMax = np.argmax(x)
     # remove phase bins within +/- 3 of peak 
@@ -134,6 +129,14 @@ def getSigmaArray(x) :
     mean, sigma = np.mean(y), np.std(y)
     xx = (x-mean)/sigma 
     return xx 
+
+def getMeanSigma(x) :
+    iMax = np.argmax(x)
+    # remove phase bins within +/- 3 of peak 
+    iLow, iHigh = max(0,iMax-3), min(len(x),iMax+3)
+    y = np.delete(x,range(iLow,iHigh))
+    mean, sigma = np.mean(y), np.std(y)
+    return mean, sigma 
 
 def getDay(args) :
     f = args.fileName 
@@ -171,6 +174,13 @@ def bindata( phase, value, NumBins):	# Averages 'value' into 'NumBins' bins base
 
     return (bdata, bnum)
 
+#   write results out to JSON file 
+def writeResults(results,file_base_name) :
+    file_name = './outputs/' + file_base_name.split('/')[-1] + '_out.json'
+    with open(file_name, 'w') as fp :
+        json.dump(results, fp)
+    return
+
 # begin execution here
 
 args = getArgs() 
@@ -178,6 +188,11 @@ args = getArgs()
 day = args.base_name 
 base_name = getFileName(args)
 mode = args.mode 
+high_pass_off = args.high_pass_off
+if args.power_mode : high_pass_off = True 
+gain = args.gain
+
+results = {}       # dictionary of results to be written out 
 
 with open(base_name + ".json") as json_file : metadata = json.load(json_file)
 
@@ -211,36 +226,78 @@ pts_2 = 1000*np.fromfile(base_name + "_2.sum", dtype=np.float32)
 if len(pts_1) > len(pts_2) : pts_1 = pts_1[:len(pts_2)]
 if len(pts_2) > len(pts_1) : pts_2 = pts_2[:len(pts_1)]
 power_time_series = pts_1 + pts_2 
+#power_time_series = pts_1
 
+results['raw_mean'] = float(np.average(power_time_series))
+results['raw_sigma'] = float(np.std(power_time_series))
+results['noise_temperature'] = gain*results['raw_mean'] 
+
+#n_downsample = int(0.10/t_fft) 
+#print("t_fft={0:e} n_downsample={1:d}".format(t_fft,n_downsample))
 if n_downsample > 1 : power_time_series = downSample(power_time_series,n_downsample)
 nRows = len(power_time_series) 
 
-if not args.high_pass_off :
+if args.middle_scan :
+    # limit the range of the time series 
+    i1, i2 = int(nRows/4), int(3*nRows/4) 
+    power_time_series = power_time_series[i1:i2]
+    nRows = len(power_time_series)
+
+if not high_pass_off :
     # apply a high pass filter to mitigate baseline wandering
     f_cutoff = 0.1
     power_time_series = highpass(power_time_series,f_cutoff,c_rate)
 
 times = np.linspace(0.,nRows*t_fft*n_downsample,nRows) 
 
-if plot_filter_hist : plotFilterHist(power_time_series, file, args=args)
-if plot_time_series : plotTimeSeries(times, power_time_series, file, args=args)
+if plot_filter_hist : plotFilterHist(power_time_series, args=args)
+if plot_time_series : plotTimeSeries(times, power_time_series, args=args)
 
-power_time_series, bad_elements = denoise(power_time_series)
-times = np.delete(times,bad_elements)
+if True :
+    power_time_series, bad_elements = denoise(power_time_series)
+    times = np.delete(times,bad_elements)
 
-if mode == "polyco" :
-    MJD = (metadata['t_start'] / 86400.) + 40587. 
+
+results['mode'] = mode 
+MJD = (metadata['t_start']/ 86400.) + 40587.
+results['MJD'] = MJD 
+
+if mode == "f0" :
+    f0 = args.f0
+    if f0 < 0.01 :
+        print("ERROR: f0 must be >0 in f0 mode.  Exiting.")
+        exit()  
+    p0 = 1./f0      
+    phase = f0*times + args.phase0
+    #phase = phase - np.floor(phase) 
+    bdata, bnum = bindata(phase, power_time_series, nBins)
+    phase_hist = np.divide(bdata,bnum)
+    sigma_array = getSigmaArray(phase_hist)
+    best_sigma = max(sigma_array)
+    results["best_sigma"] = float(best_sigma)
+
+elif mode == "polyco" :
     MJDs = MJD + times/86400. 
     pulsarName = pname 
     if pulsarName[0] == 'J' : pulsarName = pulsarName[1:]
+    #coeff = rp.getpolycoeff(MJD, metadata, base_name, file_name="polyco.dat")
     coeff = rp.getpolycoeff(MJD, metadata, base_name)
-    print("MJD={0:f} coeff={1:s}".format(MJD,str(coeff)))
+    #print("MJD={0:f} coeff={1:s}".format(MJD,str(coeff)))
     p0 = 1./coeff[4]
-    phase = time2phase(MJDs, coeff)
+    
+    phase = time2phase(MJDs, coeff) + args.phase0 
     average_period = (times[-1]-times[0])/(phase[-1]-phase[0])
-    print("Average period={0:.4f} ms".format(1000.*average_period))
+    results['period'] = average_period 
+    #print("Average period={0:.4f} ms".format(1000.*average_period))
     bdata, bnum = bindata(phase, power_time_series, nBins)
     phase_hist = np.divide(bdata,bnum)
+    mean, sigma = getMeanSigma(phase_hist)
+    results["hist_baseline"], results["hist_sigma"] = mean, sigma 
+    results["best_signal"] = 1000.*gain*(np.max(phase_hist)-mean)
+    sigma_array = getSigmaArray(phase_hist)
+    best_sigma = max(sigma_array)
+    print("polyco mode: best_sigma={0:f}".format(best_sigma))
+    results["best_sigma"] = float(best_sigma)
 else : 
     print("In scan: p0={0:f}".format(p0))
     nPeriods, nBins = args.nPeriods, args.nPhaseBins 
@@ -255,16 +312,21 @@ else :
             mapData[i] = phase_hist 
         else :
             mapData[i] = sigma_array 
-            this_sigma = np.max(sigma_array)
-            best_string = ""
-            if  this_sigma > best_sigma :
-                best_period = period 
-                best_sigma = np.max(sigma_array)
-                best_sigma_array = 1.001*sigma_array 
-                best_string = "**"
-                print("i={0:d} period={1:.4f} best_period={2:.4f} sigma={3:.3f} best_sigma={4:.3f}{5:s}".format(
-                    i,1000.*period,1000.*best_period,this_sigma,best_sigma,best_string))
-    
+        this_sigma = np.max(sigma_array)
+        best_string = ""
+        if  this_sigma > best_sigma :
+            best_period = period 
+            best_sigma = np.max(sigma_array)
+            best_sigma_array = 1.001*sigma_array 
+            mean, sigma = getMeanSigma(phase_hist)
+            results["hist_baseline"], results["hist_sigma"] = mean, sigma 
+            results["best_signal"] = 1000.*gain*(np.max(phase_hist)-mean)
+            best_string = "**"
+            print("i={0:d} period={1:.4f} best_period={2:.4f} sigma={3:.3f} best_sigma={4:.3f}{5:s}".format(
+                i,1000.*period,1000.*best_period,this_sigma,best_sigma,best_string))
+
+    results["best_sigma"] = float(best_sigma)
+    results['period'] = best_period 
     fig = plt.figure(figsize=(10.,7.5))
     ax = fig.add_subplot(111)
     ax.set_title("S/N: {0:s}  Best Period={1:.4f} ms".format(metadata['target'],1000.*best_period))
@@ -276,51 +338,70 @@ else :
     im = ax.imshow(mapData,extent=[0,1.,1000.*periods[-1],1000.*periods[0]],aspect='auto')
     im.set_cmap('jet')
     plt.colorbar(im, use_gridspec=True)
-    plt.show()
+    if not args.no_plot : plt.show() 
 
+nPoints = len(phase_hist)
+if mode in ['polyco','vlsr','f0'] :
+    best_sigma_array = getSigmaArray(phase_hist)
+    nPoints = len(best_sigma_array)
+    best_period = p0
+
+roll = 0 
+
+if not args.no_roll :  
+    roll = int(nPoints/2) - np.argmax(best_sigma_array) 
+    best_sigma_array = np.roll(best_sigma_array,roll)
+    phase_hist = np.roll(phase_hist,roll)
+results["roll"] = int(roll)
+
+x = np.linspace(0.,1.,nPoints)
+x_err = np.zeros_like(x)
+y_err = np.ones_like(best_sigma_array)
+fig2, axs2 = plt.subplots(figsize=(8,7))
 if sigma_mode :
-    nPoints = len(phase_hist)
-    if mode in ['polyco','vlsr'] :
-        best_sigma_array = getSigmaArray(phase_hist)
-        nPoints = len(best_sigma_array)
-        best_period = p0
-
-    roll = 0 
-    if not args.no_roll :  
-        roll = int(nPoints/2) - np.argmax(best_sigma_array) 
-        print("roll={0:d}".format(roll))
-        best_sigma_array = np.roll(best_sigma_array,roll)
-    
-    x = np.linspace(0.,1.,nPoints)
-    x_err = np.zeros_like(x)
-    y_err = np.ones_like(best_sigma_array)
-    fig2, axs2 = plt.subplots(figsize=(8,7))
     axs2.errorbar(x,best_sigma_array,xerr=x_err,yerr=y_err,color='red',ecolor='black',fmt='o')
-    plt.xlabel("Phase",fontsize=16)
     plt.ylabel("Signal/Noise",fontsize=16)
-    plt.title("{0:s}".format(args.base_name, fontsize=14))
-    bs = max(best_sigma_array)
-    ymin, ymax = plt.ylim() 
-    dy = ymax - ymin 
+    #plt.ylim(bottom=-5., top=40.)
+else :
+    mean, sigma = getMeanSigma(phase_hist)
+    phase_hist = 1000.*gain*(phase_hist-mean)
+    axs2.errorbar(x,phase_hist,xerr=x_err,yerr=1000.*gain*sigma*y_err,color='red',ecolor='black',fmt='o')
+    plt.ylabel("Signal (mK)",fontsize=16)
 
-    if mode == "polyco" :
-        plt.text(0.05,0.89*dy+ymin,'Polyco mode ' + metadata['target'] ,fontsize=14) 
-        plt.text(0.05,0.83*dy+ymin,"Period={0:.4f} ms".format(1000.*average_period),fontsize=14)
-        plt.text(0.05,0.77*dy+ymin,'Sigma={0:.2f} Roll={1:d}'.format(bs,roll),fontsize=14)
+plt.xlabel("Phase",fontsize=16)
+plt.title("{0:s}".format(args.base_name, fontsize=14))
+bs = max(best_sigma_array)
 
-    elif mode == "scan" :
-        plt.text(0.05,0.89*dy+ymin,'Scan mode ' + metadata['target'] ,fontsize=14) 
-        plt.text(0.05,0.83*dy+ymin,"Best period={0:.4f} ms".format(1000.*best_period),fontsize=14)
-        plt.text(0.05,0.77*dy+ymin,'Best sigma={0:.2f} Roll={1:d}'.format(bs,roll),fontsize=14)
 
-    plt.text(0.05,0.71*dy+ymin,'Az={0:.1f} Alt={1:.1f}'.format(metadata['az'],metadata['alt']),fontsize=14)
+if True : writeResults(results,base_name)
+
+ymin, ymax = plt.ylim() 
+dy = ymax - ymin 
+
+if mode == "polyco" :
+    plt.text(0.05,0.89*dy+ymin,'Polyco mode ' + metadata['target'] ,fontsize=14) 
+    plt.text(0.05,0.83*dy+ymin,"Period={0:.4f} ms".format(1000.*average_period),fontsize=14)
+    plt.text(0.05,0.77*dy+ymin,'Sigma={0:.2f} Roll={1:d}'.format(bs,roll),fontsize=14)
+
+elif mode == "scan" :
+    plt.text(0.05,0.89*dy+ymin,'Scan mode ' + metadata['target'] ,fontsize=14) 
+    plt.text(0.05,0.83*dy+ymin,"Best period={0:.4f} ms".format(1000.*best_period),fontsize=14)
+    plt.text(0.05,0.77*dy+ymin,'Best sigma={0:.2f} Roll={1:d}'.format(bs,roll),fontsize=14)
+
+elif mode == "f0" :
+    plt.text(0.05,0.89*dy+ymin,'f0 mode ' + metadata['target'] ,fontsize=14) 
+    plt.text(0.05,0.83*dy+ymin,"Period={0:.4f} ms".format(1000.*best_period),fontsize=14)
+    plt.text(0.05,0.77*dy+ymin,'Best sigma={0:.2f} Roll={1:d}'.format(bs,roll),fontsize=14)
     
-    axs2.plot([0.,1.],[0.,0.],'k--')
-    axs2.set_xlim(0.,1.)
-    plt.show()
+plt.text(0.05,0.71*dy+ymin,'Az={0:.1f} Alt={1:.1f}'.format(metadata['az'],metadata['alt']),fontsize=14)
+
+axs2.plot([0.,1.],[0.,0.],'k--')
+axs2.set_xlim(0.,1.)
+if not args.no_plot : plt.show() 
 
 
 
+     
 
 
 
