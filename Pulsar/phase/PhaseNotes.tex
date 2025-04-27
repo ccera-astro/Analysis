@@ -1,0 +1,36 @@
+\documentclass[12pt]{article}
+\usepackage[pdftex]{graphicx}
+\usepackage[inner=3cm,outer=2cm]{geometry}
+\usepackage{url}
+\setlength{\topmargin}{0in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{7.7in}
+\setlength{\textwidth}{6.5in}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\parindent}{0.15in}
+\setlength{\parskip}{0.10in}
+
+\begin{document}
+%\input ../../macros/banner.tex
+\rightline{V1.0~~\today}
+\bigskip
+\bigskip
+\bigskip
+\begin{center}
+{\Large \bf Notes on Phase Determintation for Pulsar Signals}
+\end{center}
+
+\section{General}
+The phase of a pulsar timing signal as a function of time is given by
+\begin{equation}
+\phi(t) = \phi_0 + \int_{t_o}^{t} f(t') dt' ,
+\end{equation}
+where $\phi_0$ is the phase at time $t=t_0$ and $f(t)$ is the pulsar frequency as a function of time.   To zeroth order, $f(t) = f_0 = 1/T = {\rm constant}$, where $T$ is the period of the pulsar as seen in the barycenter of the solar system.   There are, however, small $\mathcal{O}(10^{-5})$ corrections stemming  from the Doppler shift associated with the Earth's orbital and rotational motion.   Thus
+\begin{equation}
+f(t) = f_0 \left(1 + \frac{v_D(t)}{c}\right),
+\end{equation}
+where $c$ is the speed of light and $v_D$ is the motion of the telescope projected onto the line of sight to the star under observation.   
+ 
+\end{document}

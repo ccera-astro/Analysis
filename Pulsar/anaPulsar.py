@@ -9,6 +9,11 @@ import runPolyco as rp
 import scipy.stats as stats
 import time 
 
+from astropy.time import Time
+from pint.models import get_model
+import pint.toa as toa 
+import pint.logging 
+
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
@@ -248,7 +253,11 @@ if not high_pass_off :
     f_cutoff = 0.1
     power_time_series = highpass(power_time_series,f_cutoff,c_rate)
 
+
 times = np.linspace(0.,nRows*t_fft*n_downsample,nRows) 
+# use middle of samples as reference time 
+#tmid = 0.5*nRows*t_fft*n_downsample
+#times = np.linspace(-tmid,tmid,nRows)
 
 if plot_filter_hist : plotFilterHist(power_time_series, args=args)
 if plot_time_series : plotTimeSeries(times, power_time_series, args=args)
@@ -257,9 +266,12 @@ if True :
     power_time_series, bad_elements = denoise(power_time_series)
     times = np.delete(times,bad_elements)
 
-
 results['mode'] = mode 
-MJD = (metadata['t_start']/ 86400.) + 40587.
+#MJD = ((metadata['t_start'] + tmid)/ 86400.) + 40587.   # use middle as reference time 
+print("t_start={0:.7f}".format(metadata['t_start']))
+if metadata['t_start'] % 1. > 0.45 and metadata['t_start'] < 1745604855. : metadata['t_start'] += 1. 
+#metadata['t_start'] += 1.
+MJD = ((metadata['t_start'])/ 86400.) + 40587.
 results['MJD'] = MJD 
 
 if mode == "f0" :
@@ -269,28 +281,52 @@ if mode == "f0" :
         exit()  
     p0 = 1./f0      
     phase = f0*times + args.phase0
-    #phase = phase - np.floor(phase) 
+    print("before bin: phase[0]={0:.3f}".format(phase[0]))
+    bdata, bnum = bindata(phase, power_time_series, nBins)
+    print("after bin:  phase[0]={0:.3f}".format(phase[0]))
+    phase_hist = np.divide(bdata,bnum)
+    sigma_array = getSigmaArray(phase_hist)
+    best_sigma = max(sigma_array)
+    results["best_sigma"] = float(best_sigma)
+    results["period"] = p0 
+    print("times[0]={0:.3f} phase[0]={1:.3f}".format(times[0],phase[0]))
+
+elif mode.lower() == "pint" :    
+    pint.logging.setup(level="ERROR")
+    parfile = "J0332+5434_fit00.par"
+    m = get_model(parfile)
+    t1, t2 = MJD, MJD + times[-1]/86400.
+    ts = Time(np.array([t1,t2]), scale="utc", format="pulsar_mjd")
+    toas = toa.get_TOAs_array(ts, "ccera")
+    phases = m.phase(toas)
+    phi0, phi1 = phases.int[0] + phases.frac[0], phases.int[1] + phases.frac[1]
+    f0 = np.float64(((phi1-phi0)/(t2-t1)/86400.).value)  
+    print("phi0={0:f} phi1={1:f} f={2:.7f}".format(phi0,phi1,f0))
+    phase = f0*times + phi0 - 0.145
     bdata, bnum = bindata(phase, power_time_series, nBins)
     phase_hist = np.divide(bdata,bnum)
     sigma_array = getSigmaArray(phase_hist)
     best_sigma = max(sigma_array)
     results["best_sigma"] = float(best_sigma)
+    p0 = 1./f0
+    results["period"] = p0 
 
-elif mode == "polyco" :
+elif mode == "polyco" or mode == "phase" :
     MJDs = MJD + times/86400. 
     pulsarName = pname 
     if pulsarName[0] == 'J' : pulsarName = pulsarName[1:]
-    #coeff = rp.getpolycoeff(MJD, metadata, base_name, file_name="polyco.dat")
     coeff = rp.getpolycoeff(MJD, metadata, base_name)
-    #print("MJD={0:f} coeff={1:s}".format(MJD,str(coeff)))
     p0 = 1./coeff[4]
     
     phase = time2phase(MJDs, coeff) + args.phase0 
     average_period = (times[-1]-times[0])/(phase[-1]-phase[0])
-    results['period'] = average_period 
-    #print("Average period={0:.4f} ms".format(1000.*average_period))
+    results['period'] = average_period
+    f0 = 1./average_period 
+    print("Average period={0:.4f} ms, f0={1:.7f}".format(1000.*average_period,f0))
+    if mode == "phase" : phase = f0*times + args.phase0
     bdata, bnum = bindata(phase, power_time_series, nBins)
     phase_hist = np.divide(bdata,bnum)
+    
     mean, sigma = getMeanSigma(phase_hist)
     results["hist_baseline"], results["hist_sigma"] = mean, sigma 
     results["best_signal"] = 1000.*gain*(np.max(phase_hist)-mean)
@@ -341,18 +377,31 @@ else :
     if not args.no_plot : plt.show() 
 
 nPoints = len(phase_hist)
-if mode in ['polyco','vlsr','f0'] :
+if mode in ['polyco','phase','vlsr','f0','pint'] :
     best_sigma_array = getSigmaArray(phase_hist)
     nPoints = len(best_sigma_array)
     best_period = p0
 
 roll = 0 
-
 if not args.no_roll :  
     roll = int(nPoints/2) - np.argmax(best_sigma_array) 
     best_sigma_array = np.roll(best_sigma_array,roll)
     phase_hist = np.roll(phase_hist,roll)
+
+# calculate position of phase peak 
 results["roll"] = int(roll)
+nc = np.argmax(best_sigma_array)
+ncp1, ncm1 = (nc+1) % len(best_sigma_array), (nc-1)
+bsa = best_sigma_array
+center_of_mass = (-bsa[ncm1] + bsa[ncp1])/(bsa[ncm1] + bsa[nc] + bsa[ncp1]) + nc + 0.5
+print("nc={0:d} center_of_mass={1:.3f}".format(nc,center_of_mass))
+phase_peak = center_of_mass/nPoints - 0.5
+time_offset = phase_peak*best_period 
+f0 = 1./best_period
+if mode == 'polyco' or mode == 'phase': f0 = 1./average_period 
+print("phase_peak={0:.3f} time_offset={1:.8f} f0={2:.7f}".format(phase_peak,time_offset,f0))
+TOA = MJD + time_offset/86400.
+results['TOA1'], results['TOA2']  = int(TOA), TOA - int(TOA) 
 
 x = np.linspace(0.,1.,nPoints)
 x_err = np.zeros_like(x)
@@ -372,16 +421,22 @@ plt.xlabel("Phase",fontsize=16)
 plt.title("{0:s}".format(args.base_name, fontsize=14))
 bs = max(best_sigma_array)
 
-
-if True : writeResults(results,base_name)
+if True :
+    print("results={0:s}".format(str(results))) 
+    writeResults(results,base_name)
 
 ymin, ymax = plt.ylim() 
 dy = ymax - ymin 
 
-if mode == "polyco" :
+if mode == "polyco" or mode == "phase" :
     plt.text(0.05,0.89*dy+ymin,'Polyco mode ' + metadata['target'] ,fontsize=14) 
     plt.text(0.05,0.83*dy+ymin,"Period={0:.4f} ms".format(1000.*average_period),fontsize=14)
     plt.text(0.05,0.77*dy+ymin,'Sigma={0:.2f} Roll={1:d}'.format(bs,roll),fontsize=14)
+
+elif mode == "pint" :
+    plt.text(0.05,0.89*dy+ymin,'PINT mode ' + metadata['target'] ,fontsize=14) 
+    plt.text(0.05,0.83*dy+ymin,"Period={0:.4f} ms".format(1000.*p0),fontsize=14)
+    plt.text(0.05,0.77*dy+ymin,'Sigma={0:.2f} Phase Peak={1:.3f}'.format(bs,phase_peak),fontsize=14)
 
 elif mode == "scan" :
     plt.text(0.05,0.89*dy+ymin,'Scan mode ' + metadata['target'] ,fontsize=14) 

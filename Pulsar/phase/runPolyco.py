@@ -52,10 +52,10 @@ def readpolycoeff(mjd,file_name): # Read the 'polyco.dat' file from tempo and fi
 
 
 def getpolycoeff(mjd, metadata, base_name, file_name = None) :
-    if not file_name : file_name = "./polycos/polyco_{0:s}_{1:s}.dat".format(base_name.split("/")[-1][:-5],metadata['target'])
+    if not file_name : file_name = "polyco_{0:s}_{1:s}.dat".format(base_name.split("/")[-1][:-5],metadata['target'])
     #print("Entering getpolycoeff mjd={0:f} file_name={1:s}".format(mjd,file_name))
     rfreq = 1.e-6*(metadata['freq'])
-    pint.logging.setup(level="ERROR") 
+    pint.logging.setup(level="WARNING") 
     try :
         fp = open(file_name,'r')
         best_coeff, ind, num, tfreq = readpolycoeff(mjd,file_name)
@@ -75,7 +75,7 @@ def getpolycoeff(mjd, metadata, base_name, file_name = None) :
         open(par_file,'w').writelines(lines)
         model = get_model(par_file)
         #print("Making new polyco.dat file: model={0:s}".format(str(model)))
-        start, stop = (mjd - 0.5) // 1., (mjd + 1.5) // 1. 
+        start, stop = mjd // 1., (mjd + 1.) // 1. 
         #print("   Call to Polycos: start={0} stop={1}\n XXXmodel={2:s}\nXXX".format(start,stop,str(model)))
         p = polycos.Polycos.generate_polycos(model, start, stop, "CCERA", 1440/4, 4, 1420.4)
         polycos.tempo_polyco_table_writer(p,file_name) 
