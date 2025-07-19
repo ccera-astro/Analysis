@@ -76,7 +76,7 @@ def getFileName(args) :
     else :
         data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/RA_camp/" 
         if "receiver" in socket.gethostname().lower() : data_dir = "/home/dmarlow/data/"
-        elif "student" in socket.gethostname().lower() : data_dir = "/home/student/data/"
+        elif "student" in socket.gethostname().lower() : data_dir = "/home/student/data/RA_camp/"
     print("In getFileName(): data_dir={0:s} base_name={1:s}".format(data_dir,args.base_name))
     if args.name :
         for line in open("Channel_lookup.csv",'r').readlines()[1:] :
