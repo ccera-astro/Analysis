@@ -1,5 +1,13 @@
 Channel,Input,Name
-0,1,Manny
-1,1,Moe
-0,2,Jack
-1,2,Bob
+0,1,Mercury
+0,2,Venus
+1,1,Earth
+1,2,Mars
+2,1,Jupiter
+2,2,Saturn
+3,1,Uranus
+3,2,Neptune
+4,1,Pluto
+4,2,Eris
+5,1,Ceres
+5,2,Haumea

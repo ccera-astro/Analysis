@@ -5,12 +5,15 @@ import glob
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, EarthLocation
 import astropy.units as u
+from matplotlib.backends.backend_pdf import PdfPages 
 
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--start_time",default="2025-06-28-00",help="Start time yyyy-mm-dd-hh")
     parser.add_argument("--stop_time", default="2025-06-29-00",help="Stop time yyyy-mm-dd-hh")
+    parser.add_argument("-p","--plot",action="store_true",help="Plot to screen.")
+    parser.add_argument("-n","--num_chan",type=int,default=4,help="Number of channels to read")
     return parser.parse_args()
 
 def getMetaData(file) :
@@ -136,6 +139,7 @@ def getFiles(args,chan) :
     # Get a list of all files.  Make sure that they are ordered by time
     all_files = glob.glob("data/*.json")
     all_files.sort() 
+    #print("In getFiles(): len(all_files)={0:d}".format(len(all_files)))
 
     # select files that match time, channel, and input 
     files = []  
@@ -177,10 +181,27 @@ def vlsr(metadata,loc,verbose=False):
     
     return vsun_proj-vsrc
 
+def makeKey(chan,inp) :
+    return "Ch{0:02d}_{1:d}".format(chan,inp)
+
+# begin execution here 
+
 args = getArgs() 
 
-for chan in range(2) :
+# build dictionary of names
+channel_lookup = {} 
+for line in open("Channel_lookup.csv").readlines()[1:] :
+    vals = line.strip().split(',')
+    ch, inp, name = int(vals[0]), int(vals[1]), vals[2]
+    channel_lookup[makeKey(ch,inp)] = vals[2]
+print("channel_lookup={0:s}".format(str(channel_lookup)))
+
+pdf = PdfPages("DriftScan_{0:s}.pdf".format(args.start_time))
+
+for chan in range(args.num_chan+1) :
     files = getFiles(args,chan)
+    #print("chan={0:d} len(files)={1:d}".format(chan,len(files)))
+    if len(files) == 0 : break  
     base_name_0 =  files[0].strip(".json")
     meta_data = getMetaData(base_name_0 + ".json")
 
@@ -201,6 +222,7 @@ for chan in range(2) :
         scanDuration = (lastMeta['t_start'] - firstMeta['t_start'])/3600.
 
         times, vals, gain = [], [], 50./1.6 
+        title = files[0].strip(".json") + "_{0:d}".format(inp)
         for row, file in enumerate(files) :
             base_name = "./" + file.strip(".json")
             vDoppler, power = anaSpectrum(base_name,inp)
@@ -214,9 +236,12 @@ for chan in range(2) :
                 times.append((metadata['t_start']-firstMeta['t_start'])/3600.)
                 #vals.append(vDoppler[idx])
                 vals.append(metadata['vlsr'])
+
+        ky = makeKey(chan,inp) 
         fig = plt.figure(figsize=(10.5,8.))
         ax = fig.add_subplot(111)
-        ax.set_title("Drift Scan {0:s}".format(files[0].split('/')[-1].strip(".json")))
+        #ax.set_title("Drift Scan {0:s}".format(files[0].split('/')[-1].strip(".json")))
+        ax.set_title("Drift Scan: {0:s} {1:s}\n {2:s} ".format(ky,channel_lookup[ky],args.start_time))
         ax.set_xlabel("Approach velocity (km/s)")
         ax.set_ylabel("Time (hours)")
 
@@ -226,5 +251,7 @@ for chan in range(2) :
         im.set_cmap('jet')
         plt.colorbar(im, use_gridspec=True)
         plt.plot(vals,times,'w-')
-        plt.show()
+        if args.plot : plt.show() 
+        pdf.savefig(fig)
 
+pdf.close() 
