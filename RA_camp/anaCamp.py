@@ -4,6 +4,7 @@ import numpy as np
 import time
 import socket
 import glob 
+from matplotlib.backends.backend_pdf import PdfPages
 
 def getArgs() :
     import argparse
@@ -14,9 +15,8 @@ def getArgs() :
     parser.add_argument("-b","--base_name",default="2024-06-13-1858",help="File(s) to be analyzed.")
     parser.add_argument("-n","--name",default=None,help="Group name.")
     parser.add_argument("--start_time",default="2025-06-28-00",help="Start time yyyy-mm-dd-hh")
-    #parser.add_argument("--stop_time", default="2025-06-29-00",help="Stop time yyyy-mm-dd-hh")
     parser.add_argument("-g","--gain_factor",type=float,default=66000.,help="Gain factor")
-    #parser.add_argument("-r","--removeSpurs",action='store_true',help="Remove spurious peaks from spectrum.")
+    parser.add_argument("-i","--inp",type=int,default=1,help="Input (1 or 2)")
     return parser.parse_args()
 
 def getMetaData(file) :
@@ -69,8 +69,22 @@ def subtractBackground(vDoppler,power) :
     power -= background
     return power
 
+def makeKey(chan,inp) :
+    return "Ch{0:02d}_{1:d}".format(chan,inp)
+
+# build dictionary of names
+def buildChannelDictionarys() :
+    group_names, chans, inps, gains = {}, {}, {}, {}   
+    for line in open("Channel_lookup.csv").readlines()[1:] :
+        vals = line.strip().split(',')
+        ch, inp, name, gain = int(vals[0]), int(vals[1]), vals[2], float(vals[3])
+        group_names[makeKey(ch,inp)] = name 
+        chans[name], inps[name], gains[name] = ch, inp, name  
+    return group_names, chans, inps, gains
+
 def getFileName(args) :
-    inp = 1 
+    inp = args.inp
+    group_names, chans, inps, gains = buildChannelDictionarys()  
     if args.data_dir :
         data_dir = args.data_dir 
     else :
@@ -79,22 +93,25 @@ def getFileName(args) :
         elif "student" in socket.gethostname().lower() : data_dir = "/home/student/data/RA_camp/"
     print("In getFileName(): data_dir={0:s} base_name={1:s}".format(data_dir,args.base_name))
     if args.name :
-        for line in open("Channel_lookup.csv",'r').readlines()[1:] :
-            vals = line.strip().split(',')
-            inp = int(vals[1])
-            if vals[2].lower() == args.name.lower() :
-                query = "{0:s}Ch{1:02d}*.json".format(data_dir,int(vals[0]))
-                files = glob.glob(query)
-                files.sort() 
-                print("In getFileName(): len(files)={0:d}".format(len(files)))
-                for file in files :
-                    file_time = file.split("/")[-1].split("_")[1][0:13]
-                    if file_time >= args.start_time :
-                        return_name = data_dir + file.split("/")[-1].strip(".json")
-                        return return_name, inp 
-                print("Valid file not found for args.name={0:s}".format(args.name))
-                return None 
-    return data_dir + args.base_name , inp
+        chan, inp = chans[args.name], inps[args.name]
+        query = "{0:s}Ch{1:02d}*.json".format(data_dir,chan)
+        files = glob.glob(query)
+        files.sort() 
+        print("In getFileName(): len(files)={0:d}".format(len(files)))
+        for file in files :
+            file_time = file.split("/")[-1].split("_")[1][0:13]
+            if file_time >= args.start_time :
+                return_name = data_dir + file.split("/")[-1].strip(".json")
+                return return_name, inp, args.name 
+        print("Valid file not found for args.name={0:s}".format(args.name))
+        return None
+    else :
+        print("args.base_name={0:s}".format(args.base_name))
+        idx = args.base_name.find("Ch") + 2
+        print("idx={0:d}".format(idx))
+        chan = int(args.base_name[idx:idx+2])
+        group_name = group_names[makeKey(chan,inp)] 
+        return data_dir + args.base_name , inp, group_name 
 
 def getFiles(args) :
     import glob
@@ -161,16 +178,17 @@ def filterSpectrum(power,freqs,vDoppler, filter_on = True) :
 
     return power, freqs, vDoppler 
 
-
 # Begin execution here
 
 args = getArgs()
 chan = args.channel 
 gain = args.gain_factor 
-base_name, inp = getFileName(args)
+base_name, inp, group_name = getFileName(args)
 
 print("base_name={0:s}".format(base_name))
 meta_data = getMetaData(base_name + ".json")
+
+pdf = PdfPages("Spectrum_{0:s}_{1:s}.pdf".format(group_name,args.start_time))
 
 data_type = 'avg'
 if data_type == 'raw' :
@@ -192,21 +210,25 @@ vDoppler = getVelocities(freqs)
 
 if True :    
     #plt.plot(freqs,power,'b-',label="Chan 1")
+    fig = plt.figure() 
     plt.plot(freqs,power,'b.')
-    plt.title("Raw spectrum: {0:s}".format(base_name.split("/")[-1]))
+    plt.title("Raw spectrum: {0:s} {1:s}".format(base_name.split("/")[-1],group_name))
     plt.xlabel("f (MHz)")
     plt.ylabel("PSD (AU)")
     #plt.ylim(0.,1.1*np.max(power)) 
     plt.show() 
+    pdf.savefig(fig)
 
 power, freqs, vDoppler = filterSpectrum(power,freqs,vDoppler, filter_on = True)
 
 if True : 
+    fig1 = plt.figure() 
     plt.plot(freqs,power)
-    plt.title("Filtered spectrum: {0:s}".format(base_name.split("/")[-1]))
+    plt.title("Filtered spectrum: {0:s} {1:s}".format(base_name.split("/")[-1],group_name))
     plt.xlabel("f (MHz)")
     plt.ylabel("PSD (AU)")
     plt.show() 
+    pdf.savefig(fig1)
 
 vMin, vMax = -300., 300.
 i1 = np.searchsorted(vDoppler,vMin)
@@ -217,20 +239,24 @@ vDoppler = vDoppler[i1:i2]
 power = power[i1:i2]
 background = fitBackground(vDoppler,power,5,150.)
 
-subtract_background = True 
+subtract_background = True
+fig2 = plt.figure()  
 if subtract_background : 
     plt.plot(vDoppler,power-background,'r.')
     plt.plot([-300.,300.],[0., 0.],'g-')
     yMax = np.max(power-background)
-    plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
+    #plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
 else :
     plt.plot(vDoppler,power,'r.')
     plt.plot(vDoppler,background,'g-')
     yMax = np.max(power)
-    plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
+    #plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
 
-plt.title("Spectrum with gain factor {0:s}".format(base_name.split("/")[-1]))
+plt.title("Spectrum with gain factor {0:s} {1:s}".format(base_name.split("/")[-1],group_name))
 plt.xlabel('Doppler Velocity (km/s)')
 plt.ylabel('Power (K)')
-plt.legend() 
+#plt.legend() 
 plt.show()
+pdf.savefig(fig2)
+
+pdf.close() 

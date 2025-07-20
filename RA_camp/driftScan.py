@@ -184,17 +184,22 @@ def vlsr(metadata,loc,verbose=False):
 def makeKey(chan,inp) :
     return "Ch{0:02d}_{1:d}".format(chan,inp)
 
+# build dictionary of names
+def buildChannelDictionarys() :
+    group_names, chans, inps, gains = {}, {}, {}, {}   
+    for line in open("Channel_lookup.csv").readlines()[1:] :
+        vals = line.strip().split(',')
+        ch, inp, name, gain = int(vals[0]), int(vals[1]), vals[2], float(vals[3])
+        group_names[makeKey(ch,inp)] = name 
+        chans[name], inps[name], gains[name] = ch, inp, name  
+    return group_names, chans, inps, gains
+
 # begin execution here 
 
 args = getArgs() 
 
 # build dictionary of names
-channel_lookup = {} 
-for line in open("Channel_lookup.csv").readlines()[1:] :
-    vals = line.strip().split(',')
-    ch, inp, name = int(vals[0]), int(vals[1]), vals[2]
-    channel_lookup[makeKey(ch,inp)] = vals[2]
-print("channel_lookup={0:s}".format(str(channel_lookup)))
+group_names, chans, inps, gains = buildChannelDictionarys() 
 
 pdf = PdfPages("DriftScan_{0:s}.pdf".format(args.start_time))
 
@@ -241,7 +246,7 @@ for chan in range(args.num_chan+1) :
         fig = plt.figure(figsize=(10.5,8.))
         ax = fig.add_subplot(111)
         #ax.set_title("Drift Scan {0:s}".format(files[0].split('/')[-1].strip(".json")))
-        ax.set_title("Drift Scan: {0:s} {1:s}\n {2:s} ".format(ky,channel_lookup[ky],args.start_time))
+        ax.set_title("Drift Scan: {0:s} {1:s}\n {2:s} ".format(ky,group_names[ky],args.start_time))
         ax.set_xlabel("Approach velocity (km/s)")
         ax.set_ylabel("Time (hours)")
 

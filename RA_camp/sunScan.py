@@ -95,10 +95,20 @@ def getFiles(args,chan) :
 def makeKey(chan,inp) :
     return "Ch{0:02d}_{1:d}".format(chan,inp)
 
-def printScanValues(base_name,ky,times,power) :
+# build dictionary of names
+def buildChannelDictionarys() :
+    group_names, chans, inps, gains = {}, {}, {}, {}   
+    for line in open("Channel_lookup.csv").readlines()[1:] :
+        vals = line.strip().split(',')
+        ch, inp, name, gain = int(vals[0]), int(vals[1]), vals[2], float(vals[3])
+        group_names[makeKey(ch,inp)] = name 
+        chans[name], inps[name], gains[name] = ch, inp, name  
+    return group_names, chans, inps, gains
+
+def printScanValues(base_name,ky,group_names,times,power) :
     tt = base_name.split("_")[1][0:15]
-    print("base_name={0:s} ky={1:s} name={2:s}".format(base_name,ky,channel_lookup[ky]))
-    out_lines = ["{0:s}_{1:s} {2:s} \n".format(ky,tt,channel_lookup[ky])]
+    print("base_name={0:s} ky={1:s} name={2:s}".format(base_name,ky,group_names[ky]))
+    out_lines = ["{0:s}_{1:s} {2:s} \n".format(ky,tt,group_names[ky])]
     out_lines.append('     time      power\n')
     for i,t in enumerate(times) :
         out_lines.append("{0:10.2f} {1:10.2f}\n".format(t,power[i]))
@@ -107,15 +117,11 @@ def printScanValues(base_name,ky,times,power) :
 
 args = getArgs() 
 
-# build dictionary of names
-channel_lookup = {} 
-for line in open("Channel_lookup.csv").readlines()[1:] :
-    vals = line.strip().split(',')
-    ch, inp, name = int(vals[0]), int(vals[1]), vals[2]
-    channel_lookup[makeKey(ch,inp)] = vals[2]
-print("channel_lookup={0:s}".format(str(channel_lookup)))
+group_names, chans, inps, gains = buildChannelDictionarys() 
+print("group_names={0:s}".format(str(group_names )))
+print("gains={0:s}".format(str(gains)))
 
-pdf = PdfPages("Scan_{0:s}.pdf".format(args.start_time))
+pdf = PdfPages("SunScan_{0:s}.pdf".format(args.start_time))
 
 for chan in range(2) :
     files = getFiles(args,chan)
@@ -148,13 +154,13 @@ for chan in range(2) :
         if ds > 1 : times, total_power = downSample(times,ds), downSample(total_power,ds)
 
         ky = makeKey(chan,inp)
-        printScanValues(base_name_0,ky,times,total_power)
+        printScanValues(base_name_0,ky,group_names,times,total_power)
         fig1 = plt.figure() 
         plt.plot(times,total_power,'r.')
         plt.xlabel("t (hrs UTC)")
         plt.ylabel("Total power (K)")
-        plt.title("Power vs. time: {0:s} {1:s}\n  {2:s} to {3:s}".format(ky,channel_lookup[ky],args.start_time,args.stop_time))
-        if args.plot : plt.show() 
+        plt.title("Power vs. time: {0:s} {1:s}\n  {2:s} to {3:s}".format(ky,group_names[ky],args.start_time,args.stop_time))
+        if args.plot : plt.show()
         pdf.savefig(fig1)
 
 pdf.close() 
