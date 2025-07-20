@@ -102,7 +102,7 @@ def buildChannelDictionarys() :
         vals = line.strip().split(',')
         ch, inp, name, gain = int(vals[0]), int(vals[1]), vals[2], float(vals[3])
         group_names[makeKey(ch,inp)] = name 
-        chans[name], inps[name], gains[name] = ch, inp, name  
+        chans[name], inps[name], gains[name] = ch, inp, gain
     return group_names, chans, inps, gains
 
 def printScanValues(base_name,ky,group_names,times,power) :

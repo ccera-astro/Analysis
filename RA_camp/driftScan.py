@@ -191,7 +191,7 @@ def buildChannelDictionarys() :
         vals = line.strip().split(',')
         ch, inp, name, gain = int(vals[0]), int(vals[1]), vals[2], float(vals[3])
         group_names[makeKey(ch,inp)] = name 
-        chans[name], inps[name], gains[name] = ch, inp, name  
+        chans[name], inps[name], gains[name] = ch, inp, gain
     return group_names, chans, inps, gains
 
 # begin execution here 
@@ -211,7 +211,9 @@ for chan in range(args.num_chan+1) :
     meta_data = getMetaData(base_name_0 + ".json")
 
     for inp in [1,2] : 
-
+        ky = makeKey(chan,inp)
+        group_name = group_names[ky]
+        gain = gains[group_name] 
         # analyse the first file to establish the parameters of the plot
         vDoppler, power = anaSpectrum(base_name_0,inp)
         nRows, nCols = len(files), len(vDoppler)
@@ -226,7 +228,8 @@ for chan in range(args.num_chan+1) :
         firstMeta, lastMeta = getMetaData("./" + files[0]), getMetaData("./" + files[-1])
         scanDuration = (lastMeta['t_start'] - firstMeta['t_start'])/3600.
 
-        times, vals, gain = [], [], 50./1.6 
+        #times, vals, gain = [], [], 50./1.6 
+        times, vals = [], [] 
         title = files[0].strip(".json") + "_{0:d}".format(inp)
         for row, file in enumerate(files) :
             base_name = "./" + file.strip(".json")
@@ -242,7 +245,7 @@ for chan in range(args.num_chan+1) :
                 #vals.append(vDoppler[idx])
                 vals.append(metadata['vlsr'])
 
-        ky = makeKey(chan,inp) 
+        
         fig = plt.figure(figsize=(10.5,8.))
         ax = fig.add_subplot(111)
         #ax.set_title("Drift Scan {0:s}".format(files[0].split('/')[-1].strip(".json")))

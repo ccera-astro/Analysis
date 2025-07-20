@@ -15,7 +15,7 @@ def getArgs() :
     parser.add_argument("-b","--base_name",default="2024-06-13-1858",help="File(s) to be analyzed.")
     parser.add_argument("-n","--name",default=None,help="Group name.")
     parser.add_argument("--start_time",default="2025-06-28-00",help="Start time yyyy-mm-dd-hh")
-    parser.add_argument("-g","--gain_factor",type=float,default=66000.,help="Gain factor")
+    parser.add_argument("-g","--gain_factor",type=float,default=1.,help="Gain factor")
     parser.add_argument("-i","--inp",type=int,default=1,help="Input (1 or 2)")
     return parser.parse_args()
 
@@ -45,15 +45,6 @@ def getVelocities(f) :
     v = c*(f/f0 - 1.)
     return v
 
-def getGain(fName) :
-    gain = np.fromfile(fName,dtype=float) 
-    return gain
-
-def removeSpurs(series,x) :
-    spurChannels = range(613,618)    
-    x = np.delete(x,spurChannels)
-    return x
-
 def subtractBackground(vDoppler,power) :
     N = len(vDoppler) 
     v1, v2 = -200., 200.
@@ -79,7 +70,7 @@ def buildChannelDictionarys() :
         vals = line.strip().split(',')
         ch, inp, name, gain = int(vals[0]), int(vals[1]), vals[2], float(vals[3])
         group_names[makeKey(ch,inp)] = name 
-        chans[name], inps[name], gains[name] = ch, inp, name  
+        chans[name], inps[name], gains[name] = ch, inp, gain   
     return group_names, chans, inps, gains
 
 def getFileName(args) :
@@ -183,9 +174,13 @@ def filterSpectrum(power,freqs,vDoppler, filter_on = True) :
 args = getArgs()
 chan = args.channel 
 gain = args.gain_factor 
-base_name, inp, group_name = getFileName(args)
+dummy1, dummy2, dummy3, gains = buildChannelDictionarys()
+print("gains={0:s}".format(str(gains)))
 
-print("base_name={0:s}".format(base_name))
+base_name, inp, group_name = getFileName(args)
+gain *= gains[group_name]
+
+print("base_name={0:s} group_name={1:s}".format(base_name,group_name))
 meta_data = getMetaData(base_name + ".json")
 
 pdf = PdfPages("Spectrum_{0:s}_{1:s}.pdf".format(group_name,args.start_time))
@@ -242,20 +237,17 @@ background = fitBackground(vDoppler,power,5,150.)
 subtract_background = True
 fig2 = plt.figure()  
 if subtract_background : 
-    plt.plot(vDoppler,power-background,'r.')
+    plt.plot(vDoppler,gain*(power-background),'r.')
     plt.plot([-300.,300.],[0., 0.],'g-')
     yMax = np.max(power-background)
-    #plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
 else :
-    plt.plot(vDoppler,power,'r.')
-    plt.plot(vDoppler,background,'g-')
+    plt.plot(vDoppler,gain*power,'r.')
+    plt.plot(vDoppler,gain*background,'g-')
     yMax = np.max(power)
-    #plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
 
 plt.title("Spectrum with gain factor {0:s} {1:s}".format(base_name.split("/")[-1],group_name))
 plt.xlabel('Doppler Velocity (km/s)')
 plt.ylabel('Power (K)')
-#plt.legend() 
 plt.show()
 pdf.savefig(fig2)
 
