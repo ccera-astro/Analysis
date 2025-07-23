@@ -233,7 +233,8 @@ for chan in range(args.num_chan+1) :
         title = files[0].strip(".json") + "_{0:d}".format(inp)
         for row, file in enumerate(files) :
             base_name = "./" + file.strip(".json")
-            vDoppler, power = anaSpectrum(base_name,inp)
+            try: vDoppler, power = anaSpectrum(base_name,inp)
+            except : pass 
             power *= gain 
 
             mapData[row] = np.maximum(power,0.) 
