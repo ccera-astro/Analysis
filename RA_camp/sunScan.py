@@ -123,7 +123,7 @@ print("gains={0:s}".format(str(gains)))
 
 pdf = PdfPages("SunScan_{0:s}.pdf".format(args.start_time))
 
-for chan in range(2) :
+for chan in range(5) :
     files = getFiles(args,chan)
     #print("files={0:s}".format(str(files)))
     base_name_0 =  files[0].strip(".json")
