@@ -88,10 +88,12 @@ def getFileName(args) :
         query = "{0:s}Ch{1:02d}*.json".format(data_dir,chan)
         files = glob.glob(query)
         files.sort() 
-        print("In getFileName(): len(files)={0:d}".format(len(files)))
+        print("In getFileName(): len(files)={0:d} files[-5:]".format(len(files)),str(files[-5:]))
         for file in files :
-            file_time = file.split("/")[-1].split("_")[1][0:13]
+            file_time = file.split("/")[-1].split("_")[1][0:17]
+            #print("   args.start_time={0:s} file_time={1:s}".format(args.start_time,file_time))
             if file_time >= args.start_time :
+                print("  ** file selected***")
                 return_name = data_dir + file.split("/")[-1].strip(".json")
                 return return_name, inp, args.name 
         print("Valid file not found for args.name={0:s}".format(args.name))
@@ -238,6 +240,7 @@ subtract_background = True
 fig2 = plt.figure()  
 if subtract_background : 
     plt.plot(vDoppler,gain*(power-background),'r.')
+    #plt.plot(vDoppler,gain*(power-background),'b-')
     plt.plot([-300.,300.],[0., 0.],'g-')
     yMax = np.max(power-background)
 else :
