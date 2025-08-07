@@ -86,7 +86,7 @@ def getFiles(args,chan) :
         file_chan = int(file.split("/Ch")[1][:2])
         #print("file={0:s} file_chan={1:d}".format(file,file_chan))
         if file_chan == chan :
-            file_time = file.split("_")[1][0:13] 
+            file_time = file.split("_")[1][0:17] 
             if file_time >= args.start_time and file_time < args.stop_time :
                 #print("Keeping file={0:s}".format(file))
                 files.append(file)
@@ -108,10 +108,10 @@ def buildChannelDictionarys() :
 def printScanValues(base_name,ky,group_names,times,power) :
     tt = base_name.split("_")[1][0:15]
     print("base_name={0:s} ky={1:s} name={2:s}".format(base_name,ky,group_names[ky]))
-    out_lines = ["{0:s}_{1:s} {2:s} \n".format(ky,tt,group_names[ky])]
+    out_lines = ["{0:s}_{1:s} {2:s}               {0:s}_{1:s} {2:s} \n".format(ky,tt,group_names[ky])]
     out_lines.append('     time      power\n')
     for i,t in enumerate(times) :
-        out_lines.append("{0:10.2f} {1:10.2f}\n".format(t,power[i]))
+        out_lines.append("{0:10.2f} {1:10.2f}                     {0:10.2f} {1:10.2f} \n".format(t,power[i]))
     open("{0:s}_{1:s}.txt".format(ky,tt),'w').writelines(out_lines) 
     return 
 
