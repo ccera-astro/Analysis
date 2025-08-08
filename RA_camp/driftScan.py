@@ -147,7 +147,7 @@ def getFiles(args,chan) :
         file_chan = int(file.split("/Ch")[1][:2])
         #print("file={0:s} file_chan={1:d}".format(file,file_chan))
         if file_chan == chan :
-            file_time = file.split("_")[1][0:13] 
+            file_time = file.split("_")[1][0:17] 
             if file_time >= args.start_time and file_time < args.stop_time :
                 #print("Keeping file={0:s}".format(file))
                 files.append(file)
@@ -186,20 +186,20 @@ def makeKey(chan,inp) :
 
 # build dictionary of names
 def buildChannelDictionarys() :
-    group_names, chans, inps, gains = {}, {}, {}, {}   
+    group_names, chans, inps, gains, altitudes = {}, {}, {}, {}, {}  
     for line in open("Channel_lookup.csv").readlines()[1:] :
         vals = line.strip().split(',')
-        ch, inp, name, gain = int(vals[0]), int(vals[1]), vals[2], float(vals[3])
+        ch, inp, name, gain, altitude = int(vals[0]), int(vals[1]), vals[2], float(vals[3]), float(vals[4])
         group_names[makeKey(ch,inp)] = name 
-        chans[name], inps[name], gains[name] = ch, inp, gain
-    return group_names, chans, inps, gains
+        chans[name], inps[name], gains[name], altitudes[name] = ch, inp, gain, altitude 
+    return group_names, chans, inps, gains, altitudes 
 
 # begin execution here 
 
 args = getArgs() 
 
 # build dictionary of names
-group_names, chans, inps, gains = buildChannelDictionarys() 
+group_names, chans, inps, gains, altitudes = buildChannelDictionarys() 
 
 pdf = PdfPages("DriftScan_{0:s}.pdf".format(args.start_time))
 
@@ -214,6 +214,8 @@ for chan in range(args.num_chan+1) :
         ky = makeKey(chan,inp)
         group_name = group_names[ky]
         gain = gains[group_name] 
+        altitude = altitudes[group_name]
+
         # analyse the first file to establish the parameters of the plot
         vDoppler, power = anaSpectrum(base_name_0,inp)
         nRows, nCols = len(files), len(vDoppler)
@@ -249,8 +251,7 @@ for chan in range(args.num_chan+1) :
         
         fig = plt.figure(figsize=(10.5,8.))
         ax = fig.add_subplot(111)
-        #ax.set_title("Drift Scan {0:s}".format(files[0].split('/')[-1].strip(".json")))
-        ax.set_title("Drift Scan: {0:s} {1:s}\n {2:s} ".format(ky,group_names[ky],args.start_time))
+        ax.set_title("Drift Scan: {0:s} {1:s} Alt={2:.1f}\n {3:s} ".format(ky,group_names[ky],altitude,args.start_time))
         ax.set_xlabel("Approach velocity (km/s)")
         ax.set_ylabel("Time (hours)")
 
