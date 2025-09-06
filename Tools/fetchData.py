@@ -37,7 +37,7 @@ for file in files :
         if not metadata['run_mode'] == 'pulsar' : continue 
         if not metadata['target']  == 'J0332+5434' : continue 
     else :
-        if not metadata['run_mode'] == 'doppler' : continue 
+        if not metadata['run_mode'] == 'h1' : continue 
         if not metadata['target']  == 'galaxy' : continue 
 
     print("   good file")
