@@ -14,6 +14,7 @@ def getArgs() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-s","--start",default="2025-01-01",help="start date")
     parser.add_argument("--search",default="",help="search term")
+    parser.add_argument("--mode",default="pulsar",help="mode (pulsar or doppler)")
     return parser.parse_args()
 
 args = getArgs() 
@@ -32,10 +33,18 @@ for file in files :
     if tt < start : continue 
     print("  check metadata")
     with open(file) as json_file : metadata = json.load(json_file)
-    if not metadata['run_mode'] == 'pulsar' : continue 
-    if not metadata['target']  == 'J0332+5434' : continue 
+    if args.mode == "pulsar" :
+        if not metadata['run_mode'] == 'pulsar' : continue 
+        if not metadata['target']  == 'J0332+5434' : continue 
+    else :
+        if not metadata['run_mode'] == 'doppler' : continue 
+        if not metadata['target']  == 'galaxy' : continue 
+
     print("   good file")
     os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file,data_dir))
-    os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_1.sum"),data_dir))
-    os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_2.sum"),data_dir))
-
+    if args.mode == "pulsar" :
+        os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_1.sum"),data_dir))
+        os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_2.sum"),data_dir))
+    else :
+        os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_1.avg"),data_dir))
+        os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_2.avg"),data_dir))
