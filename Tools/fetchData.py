@@ -14,7 +14,7 @@ def getArgs() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-s","--start",default="2025-01-01",help="start date")
     parser.add_argument("--search",default="",help="search term")
-    parser.add_argument("--mode",default="pulsar",help="mode (pulsar or doppler)")
+    parser.add_argument("--mode",default="pulsar",help="mode (pulsar or h1)")
     return parser.parse_args()
 
 args = getArgs() 
@@ -28,7 +28,7 @@ files = glob.glob(search_term)
 print("Total of {0:d} files found.".format(len(files)))
 
 for file in files :
-    print("file={0:s}".format(file))
+    #print("file={0:s}".format(file))
     tt = file.split("/")[-1].split(".")[0]
     if tt < start : continue 
     print("  check metadata")
@@ -37,10 +37,10 @@ for file in files :
         if not metadata['run_mode'] == 'pulsar' : continue 
         if not metadata['target']  == 'J0332+5434' : continue 
     else :
-        if not metadata['run_mode'] == 'h1' : continue 
-        if not metadata['target']  == 'galaxy' : continue 
+        if not metadata['run_mode'] == 'doppler' : continue 
+        if not metadata['target']  == 'galaxy_v2' : continue 
 
-    print("   good file")
+    print("   good file={0:s}".format(file))
     os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file,data_dir))
     if args.mode == "pulsar" :
         os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_1.sum"),data_dir))
