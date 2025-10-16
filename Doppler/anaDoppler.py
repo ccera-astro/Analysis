@@ -71,6 +71,7 @@ def getFileName(args) :
     else :
         data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/Doppler/" 
         if "receiver" in socket.gethostname().lower() : data_dir = "/home/dmarlow/data/"
+    print("data_dir={0:s} base_name={1:s}".format(data_dir,args.base_name))
     return data_dir + args.base_name 
 
 def getFiles(args) :
@@ -95,12 +96,13 @@ gain = args.gain_factor
 
 # get the first file to establish the parameters of the plot
 base_name = getFileName(args)
+print("base_name={0:s}".format(base_name))
 meta_data = getMetaData(base_name + ".json")
 freqs = getFreqs(meta_data) 
 print("freqs[0]={0:.2f} freqs[-1]={1:.2f}".format(freqs[0],freqs[-1]))
 vDoppler = getVelocities(freqs)
 
-scale2 = 0.6
+scale2 = 1.0
 
 powers = [] 
 powers.append(gain*np.fromfile(base_name +"_1.avg", dtype=np.float32))
@@ -125,7 +127,7 @@ print("i1={0:d} i2={1:d}".format(i1,i2))
 freqs = freqs[i1:i2]
 vDoppler = vDoppler[i1:i2]
 power = power[i1:i2]
-background = fitBackground(vDoppler,power,3,150.)
+background = fitBackground(vDoppler,power,5,150.)
 
 subtract_background = True 
 if subtract_background : 

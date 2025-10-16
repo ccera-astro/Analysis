@@ -259,7 +259,8 @@ for chan in range(args.num_chan+1) :
 
         im = ax.imshow(mapData,extent=[-300.,300.,scanDuration,0.],aspect='auto')
         im.set_cmap('jet')
-        plt.colorbar(im, use_gridspec=True)
+        cbar = plt.colorbar(im, use_gridspec=True)
+        cbar.set_label('Antenna Temperature (K)')
         plt.plot(vals,times,'w-')
         if args.plot : plt.show() 
         pdf.savefig(fig)

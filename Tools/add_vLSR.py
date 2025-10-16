@@ -7,7 +7,14 @@ import astropy.units as u
 import glob 
 import json 
 
-
+def getArgs() :
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-p","--printLevel",type=int,help="Print level.")
+    parser.add_argument("-i","--in_dir",default="./data/",help="input directory")
+    parser.add_argument("-o","--out_dir",default="./new/",help="output directory")
+    parser.add_argument("-b","--base_name",default=None,help="base_name to convert")
+    return parser.parse_args()
 
 def vlsr(metadata,loc,verbose=False):
     """Compute the line of sight radial velocity
@@ -40,8 +47,16 @@ def vlsr(metadata,loc,verbose=False):
 lat, lon = 45.3491, -76.0413 
 geo_loc = EarthLocation.from_geodetic(lat = lat*u.deg, lon = lon*u.deg, height = 100*u.m)
 
-in_dir, out_dir = "./data/", "./new/"
-files = glob.glob(in_dir + "*.json")
+#in_dir, out_dir = "./data36/", "./new/"
+args = getArgs() 
+in_dir, out_dir, base = args.in_dir, args.out_dir, args.base_name 
+
+if not base :
+    files = glob.glob(in_dir + "*.json")
+else :
+    files = ['{0:s}/{1:s}'.format(in_dir,base) + '.json']
+
+print("In add_vLSR.py: in_dir={0:s} files={1:s}".format(in_dir,str(files)))
 for file in files :
     with open(file) as json_file: metadata  = json.load(json_file)
     vLSR =  -vlsr(metadata,geo_loc) 

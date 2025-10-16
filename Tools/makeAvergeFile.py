@@ -1,10 +1,8 @@
 # average the spectra in a raw data file 
 
 import numpy as np
-import scipy.signal
-import matplotlib.pyplot as plt 
 import socket 
-import json 
+import glob
 
 def getArgs() :
     import argparse
@@ -15,15 +13,28 @@ def getArgs() :
     return parser.parse_args()
 
 def getFileName(args) :
+    base_names = [] 
     if args.data_dir :
         data_dir = args.data_dir 
     else :
         data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/Doppler/" 
         if "receiver" in socket.gethostname().lower() : data_dir = "/home/dmarlow/data/"
-    return data_dir + args.base_name 
+
+    glob_string = data_dir + args.base_name  
+    print("glob_string={0:s}".format(glob_string))
+    files = glob.glob(glob_string)
+    
+    print("files = {0:s}".format(str(files)))
+    for file in files : 
+        if "json" in file : base_names.append(file.strip(".json"))
+
+    print("\n\n base_names = {0:s}".format(str(base_names)))
+    return base_names  
 
 def getData(file,fft_size) :
+    print("Reading from file = {0:s}".format(file))
     vals = np.fromfile(file, dtype=np.float32)
+    print("len(vals)={0:d}".format(len(vals)))
     cols = fft_size
     rows = int(len(vals)/fft_size) 
     return vals, rows, cols
@@ -39,25 +50,26 @@ def getMetaData(file) :
 # begin execution here
 
 args = getArgs() 
-base_name = getFileName(args)
-#with open(base_name + ".json") as json_file : metadata = json.load(json_file)
+base_names = getFileName(args)
 
-metadata = getMetaData(base_name + ".json")
-f_sample = metadata['srate']
-fft_size = metadata['fft_size']
+for base_name in base_names :
+    print("\n** base_name={0:s}".format(base_name))
+    metadata = getMetaData(base_name + ".json")
+    f_sample = metadata['srate']
+    fft_size = metadata['fft_size']
 
-for chan in [1,2] :
-    data, rows, cols = getData(base_name + "_{0:d}.raw".format(chan),fft_size)
-    print("After getData Chan {0:d}: rows={1:d} cols={2:d}".format(chan,rows,cols))
+    for chan in [1,2] :
+        data, rows, cols = getData(base_name + "_{0:d}.raw".format(chan),fft_size)
+        print("After getData Chan {0:d}: rows={1:d} cols={2:d}".format(chan,rows,cols))
 
-    # reshape array into a series of row 
-    data = np.reshape(data, (rows,cols))   
-    print("len(data[0])={0:d}".format(len(data[0])))
+        # reshape array into a series of row 
+        data = np.reshape(data, (rows,cols))   
+        print("len(data[0])={0:d}".format(len(data[0])))
 
-    avg_data = np.mean(data,0)
-    print("len(avg_data)={0:d}".format(len(avg_data)))
+        avg_data = np.mean(data,0)
+        print("len(avg_data)={0:d}".format(len(avg_data)))
 
-    avg_data.tofile(base_name + "_{0:d}.avg".format(chan))
+        avg_data.tofile(base_name + "_{0:d}.avg".format(chan))
 
 
 

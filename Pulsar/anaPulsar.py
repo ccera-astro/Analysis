@@ -8,6 +8,7 @@ import json
 import runPolyco as rp 
 import scipy.stats as stats
 import time 
+import fitPhase
 
 from astropy.time import Time
 from pint.models import get_model
@@ -186,20 +187,24 @@ def writeResults(results,file_base_name) :
         json.dump(results, fp)
     return
 
+
+
+
 # begin execution here
 
 args = getArgs() 
 
 day = args.base_name 
 base_name = getFileName(args)
+print("\nEntering anaPulsar.py base_name={0:s} mode={1:s}".format(base_name,args.mode))
 mode = args.mode 
 high_pass_off = args.high_pass_off
 if args.power_mode : high_pass_off = True 
 gain = args.gain
 
-results = {}       # dictionary of results to be written out 
-
 with open(base_name + ".json") as json_file : metadata = json.load(json_file)
+
+results = metadata       # dictionary of results to be written out
 
 # read or calculate various run parameters 
 f_sample = metadata['srate']
@@ -221,7 +226,7 @@ if mode == "scan" :
     n_downsample = 4 
     p0 = args.p0  
     if not args.p0 > 0. :
-        if pname.lower() == 'j0332+5434' : p0 = 0.714519699726
+        if pname.lower() == 'j0332+5434' : p0 = 0.71452222
         elif pname.lower() == 'j0953+0755' : p0 = 0.253065164948
     print("Pulsar={0:s} p0={1:.6f}".format(metadata['target'],p0))
     
@@ -253,24 +258,17 @@ if not high_pass_off :
     f_cutoff = 0.1
     power_time_series = highpass(power_time_series,f_cutoff,c_rate)
 
-
 times = np.linspace(0.,nRows*t_fft*n_downsample,nRows) 
-# use middle of samples as reference time 
-#tmid = 0.5*nRows*t_fft*n_downsample
-#times = np.linspace(-tmid,tmid,nRows)
 
 if plot_filter_hist : plotFilterHist(power_time_series, args=args)
 if plot_time_series : plotTimeSeries(times, power_time_series, args=args)
 
-if True :
-    power_time_series, bad_elements = denoise(power_time_series)
-    times = np.delete(times,bad_elements)
+power_time_series, bad_elements = denoise(power_time_series)
+times = np.delete(times,bad_elements)
 
 results['mode'] = mode 
-#MJD = ((metadata['t_start'] + tmid)/ 86400.) + 40587.   # use middle as reference time 
-print("t_start={0:.7f}".format(metadata['t_start']))
+#print("t_start={0:.7f}".format(metadata['t_start']))
 if metadata['t_start'] % 1. > 0.45 and metadata['t_start'] < 1745604855. : metadata['t_start'] += 1. 
-#metadata['t_start'] += 1.
 MJD = ((metadata['t_start'])/ 86400.) + 40587.
 results['MJD'] = MJD 
 
@@ -341,7 +339,7 @@ else :
     mapData = np.zeros((nPeriods,nBins))   
     best_sigma = 0. 
     for i, period in enumerate(periods) :
-        bdata, bnum = bindata(times/period, power_time_series, nBins)
+        bdata, bnum = bindata(times/period + args.phase0, power_time_series, nBins)
         phase_hist = np.divide(bdata,bnum)
         sigma_array = getSigmaArray(phase_hist)
         if not sigma_mode :
@@ -350,6 +348,7 @@ else :
             mapData[i] = sigma_array 
         this_sigma = np.max(sigma_array)
         best_string = ""
+        
         if  this_sigma > best_sigma :
             best_period = period 
             best_sigma = np.max(sigma_array)
@@ -365,15 +364,18 @@ else :
     results['period'] = best_period 
     fig = plt.figure(figsize=(10.,7.5))
     ax = fig.add_subplot(111)
-    ax.set_title("S/N: {0:s}  Best Period={1:.4f} ms".format(metadata['target'],1000.*best_period))
+    ax.set_title("S/N: {0:s}  Best Period={1:.4f} ms".format(metadata['target'],1000.*best_period),size=14)
     ax.patch.set_facecolor('white')
+    ax.tick_params(axis='both', labelsize=14) 
     ax.set_xlabel("Phase",size=14)
     ax.set_ylabel("Period (ms)",size=14)
     eps = float(args.eps)
     mapData = np.maximum(mapData,0.)
     im = ax.imshow(mapData,extent=[0,1.,1000.*periods[-1],1000.*periods[0]],aspect='auto')
     im.set_cmap('jet')
-    plt.colorbar(im, use_gridspec=True)
+    cbar = fig.colorbar(im, use_gridspec=True)
+    cbar.ax.tick_params(labelsize=14)  # Set labelsize to your desired value
+    cbar.set_label('S/N', fontsize=14)
     if not args.no_plot : plt.show() 
 
 nPoints = len(phase_hist)
@@ -393,24 +395,29 @@ results["roll"] = int(roll)
 nc = np.argmax(best_sigma_array)
 ncp1, ncm1 = (nc+1) % len(best_sigma_array), (nc-1)
 bsa = best_sigma_array
-center_of_mass = (-bsa[ncm1] + bsa[ncp1])/(bsa[ncm1] + bsa[nc] + bsa[ncp1]) + nc + 0.5
-print("nc={0:d} center_of_mass={1:.3f}".format(nc,center_of_mass))
-phase_peak = center_of_mass/nPoints - 0.5
-time_offset = phase_peak*best_period 
+
+amp, mean, sigma, mean_err  = fitPhase.fitPhasePlot(bsa) 
+print("amp={0:8.2f} sigma={1:8.5f} mean={2:8.5f} +/- {3:.5f}".format(amp,sigma,mean,mean_err))
+
+
+time_offset = mean*best_period 
 f0 = 1./best_period
 if mode == 'polyco' or mode == 'phase': f0 = 1./average_period 
-print("phase_peak={0:.3f} time_offset={1:.8f} f0={2:.7f}".format(phase_peak,time_offset,f0))
+print("mean phase={0:.3f} time_offset={1:.8f} f0={2:.7f}".format(mean,time_offset,f0))
 TOA = MJD + time_offset/86400.
 results['TOA1'], results['TOA2']  = int(TOA), TOA - int(TOA) 
 
-x = np.linspace(0.,1.,nPoints)
+dx = 0.5/nBins
+x = np.linspace(-0.5+dx,0.5-dx,nBins)
+#x = np.linspace(0.,1.,nPoints)
 x_err = np.zeros_like(x)
 y_err = np.ones_like(best_sigma_array)
 fig2, axs2 = plt.subplots(figsize=(8,7))
 if sigma_mode :
-    axs2.errorbar(x,best_sigma_array,xerr=x_err,yerr=y_err,color='red',ecolor='black',fmt='o')
+    axs2.errorbar(x+0.5,best_sigma_array,xerr=x_err,yerr=y_err,color='red',ecolor='black',fmt='o')
     plt.ylabel("Signal/Noise",fontsize=16)
-    #plt.ylim(bottom=-5., top=40.)
+    y = fitPhase.phase_function(x, amp, mean, sigma)
+    axs2.step(x+0.5+dx,y,'b')
 else :
     mean, sigma = getMeanSigma(phase_hist)
     phase_hist = 1000.*gain*(phase_hist-mean)
@@ -422,7 +429,7 @@ plt.title("{0:s}".format(args.base_name, fontsize=14))
 bs = max(best_sigma_array)
 
 if True :
-    print("results={0:s}".format(str(results))) 
+    #print("results={0:s}".format(str(results))) 
     writeResults(results,base_name)
 
 ymin, ymax = plt.ylim() 

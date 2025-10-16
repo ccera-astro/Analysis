@@ -46,8 +46,8 @@ def readpolycoeff(mjd,file_name): # Read the 'polyco.dat' file from tempo and fi
             best_coeff = coeff
             ind += 1
 
-    print('Leaving readpolycoeff: Best fit at ' + str(ind) + ' / ' + str(num))
-    print("best_coeff={0:s} ind={1:d} num={2:d} tfreq={3}".format(str(best_coeff), ind, num, tfreq))
+    #print('Leaving readpolycoeff: Best fit at ' + str(ind) + ' / ' + str(num))
+    #print("best_coeff={0:s} ind={1:d} num={2:d} tfreq={3}".format(str(best_coeff), ind, num, tfreq))
     return ( best_coeff, ind, num, tfreq )
 
 

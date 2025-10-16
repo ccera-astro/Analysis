@@ -4,14 +4,24 @@ import json
 import matplotlib.pyplot as plt 
 import scipy.stats as stats
 import runPolyco as rp 
+import fitPhase  
+from math import sqrt 
+import random 
+from EarthOrbit import earth_state_xy_km 
 
 def getArgs() :
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-r","--ref",default="2024-12-24-0217",help="Reference run.")
-    parser.add_argument("-t","--target",default="2024-12-28-1858",help="Target run.")
-    parser.add_argument("--nPhaseBins",type=int,default=50,help="Number of bins in phase plot")
+    parser.add_argument("-t","--tgt",default="2024-12-25-0214",help="Target run.")
+    parser.add_argument("--nPhaseBins",type=int,default=200,help="Number of bins in phase plot")
     parser.add_argument("-p","--phase_0",type=float,default=-1000.,help="Phase shift for reference data.")
+    parser.add_argument("--plot",action="store_true",help="Plot results")
+    parser.add_argument("--run_all",action="store_true",help="Plot results")
+    parser.add_argument("--dither",action="store_true",help="dither fitted phase by 0.1")
+    parser.add_argument("-m","--mode",default="polyco",help="Method used for initial freq:  polyco, H1, pass1, pass2")
+    parser.add_argument("--nSigma",type=float,default=5.0,help="Minimum SNR")
+    parser.add_argument("--n_files",type=int,default=999999,help="Maximum number of files to analyze")
     return parser.parse_args()  
 
 def getData(base_name) :
@@ -30,7 +40,7 @@ def denoise(array) :
     threshold = p50 + 10.*sigma 
     indices = np.where(array > threshold)[0]
     filtered_array = np.delete(array, indices)
-    if True : 
+    if False : 
         la, lf = len(array), len(filtered_array)
         print("In    denoise(): p16={0:f} p50={1:f} sigma={2:f} fraction removed={3:.4f}%".format(
             p16,p50,sigma,100.*(la-lf)/float(la)))
@@ -75,7 +85,7 @@ def time2phase(time, best_coeff):	#Converts a set of times (mjd) into phases for
 
 # do a standard polyco analysis on this dataset 
 def anaPolyco(args, base_name, data) :
-    print("data={0:s}".format(str(data)))
+    #print("data={0:s}".format(str(data)))
     # read or calculate various run parameters 
     c_rate = data['srate']/data['fft_size']/data['decimation_factor'] 
     t_fft = 1./c_rate 
@@ -115,72 +125,178 @@ def anaf0(args, base_name, data, f, phase_offset) :
     times = np.linspace(0.,nRows*t_fft,nRows)
     power_series, bad_elements = denoise(power_series)
     times = np.delete(times,bad_elements)
-
+    #print("f={0:f} phase_offset={1:f}".format(f,phase_offset))
     phase = f*times + phase_offset 
     bdata, bnum = bindata(phase, power_series, nBins)
     ph = np.divide(bdata,bnum)
     sa = getSigmaArray(ph)
+     
+    amp, mean, sigma, mean_err  = fitPhase.fitPhasePlot(sa) 
 
-    nc = np.argmax(sa)
-    center_of_mass = (-sa[nc-1]+sa[nc+1])/np.sum(sa[nc-1:nc+2]) + nc + 0.5
-    print("nc={0:d} center_of_mass={1:.3f}".format(nc,center_of_mass))
-    phase_peak = center_of_mass/nBins - 0.5
-    print("nc={0:d} phase_peak={1:.3f} f_ref={2:.7f}".format(nc,phase_peak,f_ref))
+    return sa, mean, mean_err 
 
-    return sa, phase_peak 
+def orbit_function_3(MJD, MJD0, e, coslat, perihelion_angle):
+    t_year = 365.24
+    MJD1 = MJD0 + (perihelion_angle/360.)*t_year
+    x, y, vx, vy = earth_state_xy_km(MJD-MJD1,e=e,omega=perihelion_angle)
+    return vx*coslat  
 
-# begin execution here 
-args = getArgs() 
-nBins = args.nPhaseBins 
-data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/"
-ref_base_name, target_base_name = data_dir + args.ref, data_dir + args.target  
-with open(ref_base_name + ".json") as json_file: ref_data = json.load(json_file)
-if ref_data['t_start'] % 1. > 0.45 : ref_data['t_start'] += 1. 
-with open(target_base_name + ".json") as json_file: target_data = json.load(json_file)
-if target_data['t_start'] % 1. > 0.45 : target_data['t_start'] += 1.
+def orbit_function_H1_DRM(MJD, offset, e, coslat, perihelion_angle):
+    MJD0 = 60822.75
+    t_year = 365.24
+    MJD1 = MJD0 + (perihelion_angle/360.)*t_year
+    x, y, vx, vy = earth_state_xy_km(MJD-MJD1,e=e,omega=perihelion_angle)
+    return vx*coslat + offset
 
-# do a standard PINT/polyco analysis on both data sets 
-p_ref, f_ref, sigma_ref, sigma_array_ref = anaPolyco(args,ref_base_name, ref_data)
-p_target, f_target, sigma_target, sigma_array_target = anaPolyco(args,target_base_name, target_data)
+def getScanFreq(args, base_name, data) :
+    if args.mode.lower() == "polyco" :
+        p, f, sigma, sigma_array = anaPolyco(args,base_name,data)
+        return f
+    
+    if args.mode.lower() in ['h1','pass1','pass2'] :
+        MJD00 = 60729.95 
+        PEPOCH = 46473.0
+        F0 = 1.399541538720
+        F1 = -4.011970E-15     
+        f0 = F0 - 86400.*(PEPOCH-MJD00)*F1
+        c = 299792.458
+        MJD = data['t_start']/ 86400. + 40587.
+    
+    if args.mode.lower() == 'pass1' :
+        MJD0, e, coslat, perihelion = 6.08239457e+04, 2.19226138e-02, 8.19508363e-01, 2.41564142e+02
+        vx = orbit_function_3(MJD, MJD0, e, coslat, perihelion)
+    elif args.mode.lower() == 'h1' :
+        offset, MJD0, e, coslat, perihelion = 1.31850274e-01, 6.08203485e+04, 1.64021937e-02, 8.27603619e-01, 2.07466866e+02
+        vx = orbit_function_H1_DRM(MJD, offset, e, coslat, perihelion)
+    elif args.mode.lower() == 'pass2' :
+        MJD0, e, coslat, perihelion = 6.08227742e+04, 1.67813192e-02, 8.26257985e-01, 2.18123231e+02
+        vx = orbit_function_3(MJD, MJD0, e, coslat, perihelion)
+    else :
+        print("args.mode ={0:s} not implemented . . . exiting.".format(args.mode))
+        exit() 
 
-# do a fixed frequency analysis on the reference data set 
-sigma_array, ref_phase  = anaf0(args, ref_base_name, ref_data, f_ref, 0.)
-
-#plt.plot(sigma_array,'bo')
-#plt.show() 
-
-# extrapolate to target 
-f_avg = 0.5*(f_ref+f_target)
-print("f_ref={0:.7f} f_target={1:.7f} avg={2:.7f}".format(f_ref,f_target,f_avg))
-dt = target_data['t_start'] - ref_data['t_start']
-target_phase = f_avg*dt - ref_phase
-print("t_ref={0:.3f} t_target={1:.3f} dt={2:.3f}".format(ref_data['t_start'],target_data['t_start'],dt))
-print("ref_phase={0:.3f} d_phi={1:.3f} phi_1={2:.3f}".format(ref_phase,f_avg*dt,target_phase))
-
-# do a fixed frequency analysis on the target data set 
-sigma_array, phase_peak  = anaf0(args, target_base_name, target_data, f_target, target_phase)
-
-# plot the result 
-x = np.linspace(-0.5,0.5,nBins)
-x_err = np.zeros_like(x)
-y_err = np.ones_like(sigma_array)
-fig2, axs2 = plt.subplots(figsize=(8,7))
-axs2.errorbar(x,sigma_array,xerr=x_err,yerr=y_err,color='red',ecolor='black',fmt='o')
-plt.ylabel("Signal/Noise",fontsize=16)
-plt.xlabel("Phase",fontsize=16)
-plt.title('Extrapolation from {0:s} to {1:s}'.format(args.ref,args.target) ,fontsize=14) 
-bs = max(sigma_array)
-
-ymin, ymax = plt.ylim() 
-dy = ymax - ymin 
-
-plt.text(0.05,0.77*dy+ymin,'Best sigma={0:.2f}'.format(bs),fontsize=14)
-plt.text(0.05,0.71*dy+ymin,'Az={0:.1f} Alt={1:.1f}'.format(target_data['az'],target_data['alt']),fontsize=14)
-
-plt.arrow(phase_peak,ymax/6.,0.,-ymax/6.,head_width=0.02,head_length=ymax/30.,fc='k',length_includes_head=True)
-plt.text(phase_peak+0.02,ymax/6.,r'$\phi={0:.3f}$'.format(phase_peak),fontsize=16)
-axs2.plot([-0.5,0.5],[0.,0.],'k--')
-axs2.set_xlim(-0.5,0.5)
-plt.show() 
+    f = f0*(1. - vx/c)
+    return f 
 
 
+def extrapolatePhase(args) :
+
+    nBins = args.nPhaseBins 
+    data_dir = "/mnt/c/Users/marlow/Documents/CCERA/data/"
+    ref_base_name, tgt_base_name = data_dir + args.ref, data_dir + args.tgt
+    with open(ref_base_name + ".json") as json_file: ref_data = json.load(json_file)
+    if ref_data['t_start'] % 1. > 0.45 and ref_data['t_start'] < 1745604855. : 
+        ref_data['t_start'] += 1.
+    with open(tgt_base_name + ".json") as json_file: tgt_data = json.load(json_file)
+    if tgt_data['t_start'] % 1. > 0.45 and tgt_data['t_start'] < 1745604855. : 
+        tgt_data['t_start'] += 1.
+
+    print("ref_base_name={0:s} \ntgt_base_name={1:s}".format(ref_base_name,tgt_base_name))
+    
+    f_ref = getScanFreq(args, ref_base_name, ref_data)
+    f_tgt = getScanFreq(args, tgt_base_name, tgt_data)
+        
+    sigma_array, ref_phase, phase_err_ref  = anaf0(args, ref_base_name, ref_data, f_ref, 0.)
+
+    # extrapolate to target 
+    print("In extrapolatePhase(): f_ref={0:.9f} f_tgt={1:.9f}".format(f_ref,f_tgt))
+    f_avg = 0.5*(f_ref+f_tgt) 
+    dt = tgt_data['t_start'] - ref_data['t_start']
+    tgt_phase = f_avg*dt - ref_phase
+
+    sigma_array, phase_peak, phase_err_tgt  = anaf0(args, tgt_base_name, tgt_data, f_tgt, tgt_phase)
+    phase_err = sqrt(phase_err_ref*phase_err_ref + phase_err_tgt*phase_err_tgt)
+    
+    if args.plot : 
+        # plot the result 
+        x = np.linspace(-0.5,0.5,nBins)
+        x_err = np.zeros_like(x)
+        y_err = np.ones_like(sigma_array)
+        fig2, axs2 = plt.subplots(figsize=(8,7))
+        axs2.errorbar(x,sigma_array,xerr=x_err,yerr=y_err,color='red',ecolor='black',fmt='o')
+        plt.ylabel("Signal/Noise",fontsize=16)
+        plt.xlabel("Phase",fontsize=16)
+        plt.title('Extrapolation from {0:s} to {1:s}'.format(args.ref,args.tgt) ,fontsize=14) 
+        bs = max(sigma_array)
+
+        ymin, ymax = plt.ylim() 
+        dy = ymax - ymin 
+
+        plt.text(0.05,0.77*dy+ymin,'Best sigma={0:.2f}'.format(bs),fontsize=14)
+        plt.text(0.05,0.71*dy+ymin,'Az={0:.1f} Alt={1:.1f}'.format(tgt_data['az'],tgt_data['alt']),fontsize=14)
+
+        plt.arrow(phase_peak,ymax/6.,0.,-ymax/6.,head_width=0.02,head_length=ymax/30.,fc='k',length_includes_head=True)
+        plt.text(phase_peak+0.02,ymax/6.,r'$\phi={0:.3f}$'.format(phase_peak),fontsize=16)
+        axs2.plot([-0.5,0.5],[0.,0.],'k--')
+        axs2.set_xlim(-0.5,0.5)
+        plt.show()
+    print("\n") 
+    return phase_peak, phase_err, f_avg   
+
+def MJD_to_unix(MJD) : return 86400.*(MJD-40587.)
+
+def unix_to_MJD(t) : return (t / 86400.) + 40587.
+
+if __name__ == "__main__":
+    args = getArgs() 
+    if args.run_all :
+        import glob 
+        files = glob.glob("./outputs/*.json")
+        print("len(files)={0:d}".format(len(files)))
+           
+        lhead = "   reference        target       dPhi      f_avg     f_corr (nHz)   f_err (nHz) days\n"
+        outlines, MJD_lines = [lhead], []
+        ref_file = files[0]
+        args.ref = ref_file.split("/")[-1].replace("_out.json","")
+        nDays = 1  # Maximum number of days between reference and target
+        if args.mode.lower() == "h1" : nDays = 2  
+        if args.mode.lower() in ["polyco","pass2"] : nDays = 5
+        for i in range(1,min(args.n_files,len(files))) :
+            tgt_file = files[i]
+            #print("i={0:3d} ref_file={1:s} tgt_file={2:s}".format(i,ref_file,tgt_file))
+            if tgt_file == "./outputs/2025-01-28-2356_out.json" : continue 
+            if tgt_file == "./outputs/2025-01-28-0000_out.json" : continue 
+            if tgt_file == "./outputs/2025-02-27-2158_out.json" : continue  
+            with open(ref_file) as json_file : ref_data = json.load(json_file)
+            t_ref = ref_data["t_start"] 
+            args.ref = ref_file.split("/")[-1].replace("_out.json","")
+            with open(tgt_file) as json_file : tgt_data = json.load(json_file)
+            args.tgt = tgt_file.split("/")[-1].replace("_out.json","")
+            t_tgt = tgt_data["t_start"] 
+            #print("ref: {0:s} tgt: {1:s}".format(args.ref,args.tgt))
+            print("best_sigma: ref={0:7.2f} tgt={1:7.2f}  dT={2:7.2f}".format(
+                ref_data["best_sigma"],tgt_data["best_sigma"],(t_tgt - t_ref)/86400.))
+            # if the target signal is too weak, move on to the next one, keeping the same reference 
+            if tgt_data["best_sigma"] < args.nSigma : continue 
+            if t_tgt - t_ref < 86400.*nDays :
+                dPhi, phi_err, f_avg = extrapolatePhase(args)
+                if args.dither :
+                    dPhi = dPhi + random.gauss(0.,0.1)
+                    if dPhi < -0.5 : dPhi += 1.
+                    if dPhi >  0.5 : dPhi -= 1. 
+                f_corr = dPhi/(t_tgt-t_ref)
+                ref_timing_error = 1.e-6*(1260. - 58.3*ref_data["best_sigma"])
+                tgt_timing_error = 1.e-6*(1260. - 58.3*tgt_data["best_sigma"])
+                timing_error = sqrt(ref_timing_error**2 + tgt_timing_error**2)   
+                f_err = (timing_error/(t_tgt-t_ref))*f_avg
+                t_avg = 0.5*(t_ref + t_tgt)
+                MJD_avg = unix_to_MJD(t_avg)
+                MJD_lines += "{0:15.6f} {1:13.10f} {2:13.10f}\n".format(MJD_avg,f_avg-f_corr,f_err)
+                ll = "{0:s} {1:s} {2:6.3f} {3:12.9f} {4:12.1f} {5:12.1f} {6:6.2f}\n".format(
+                    args.ref,args.tgt,dPhi, f_avg, 1.e9*f_corr, 1.e9*f_err, (t_tgt-t_ref)/86400.)
+                outlines += ll 
+                print(lhead + ll)
+            # use existing target as new reference 
+            ref_file = files[i]
+
+        open("out.txt","w").writelines(outlines) 
+        open("MJDs_freqs_temp.txt","w").writelines(MJD_lines)
+    else :
+        ref_json = "./outputs/{0:s}_out.json".format(args.ref)
+        with open(ref_json) as json_file : ref_data = json.load(json_file)
+        tgt_json = "./outputs/{0:s}_out.json".format(args.tgt)
+        with open(tgt_json) as json_file : tgt_data = json.load(json_file)
+        print("  best_sigma: ref={0:6.2f} tgt={1:6.2f}".format(ref_data["best_sigma"],tgt_data["best_sigma"]))
+        dPhi, phi_err, f_avg = extrapolatePhase(args)
+        print("ref={0:s} tgt={1:s} dPhi={2:.5f} +/- {3:.5f} f_avg={4:.8f}".format(
+            args.ref,args.tgt,dPhi,phi_err,f_avg))

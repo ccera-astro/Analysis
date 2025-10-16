@@ -1,89 +1,257 @@
-python anaPulsar.py -b 2025-02-01-2340 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-02-2336 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-03-2332 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-04-2328 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-05-2324 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-06-2320 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-07-2317 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-08-2313 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-09-2309 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-10-2305 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-11-2301 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-12-2257 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-13-2253 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-14-2249 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-15-2245 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-16-2241 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-17-2237 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-19-2230 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-20-2225 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-21-2221 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-22-2218 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-23-2214 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-24-2210 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-25-2206 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-26-2202 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-27-2158 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-02-28-2154 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-01-2150 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-02-2146 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-03-2142 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-04-2138 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-05-2134 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-06-2130 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-07-2126 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-08-2122 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-09-2118 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-10-2115 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-11-2111 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-12-2107 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-13-2103 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-15-2055 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-16-2051 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-17-2047 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-18-2043 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-19-2039 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-20-2035 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-21-2031 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-22-2028 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-23-2024 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-24-2020 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-25-2016 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-26-2012 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-27-2008 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-28-2004 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-29-2000 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-30-1956 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-03-31-1952 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-01-1948 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-02-1944 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-03-1940 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-04-1937 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-05-1932 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-06-1928 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-07-1925 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-08-1921 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-09-1725 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-09-1943 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-10-1913 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-11-1909 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-12-1905 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-13-1901 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-14-1857 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-15-1853 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-16-1849 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-17-1845 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-18-1841 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-19-1837 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-20-1833 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-21-1830 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-22-1443 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-22-1513 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-22-1544 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-22-1614 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-22-1723 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-22-1753 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-22-1825 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-22-1902 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-23-1822 -m phase --no_plot --high_pass_off --no_roll 
-python anaPulsar.py -b 2025-04-24-1818 -m phase --no_plot --high_pass_off --no_roll 
+python anaPulsar.py -b 2024-12-11-0309 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-12-0305 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-13-0301 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-14-0257 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-15-0253 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-16-0249 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-17-0245 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-18-0241 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-19-0237 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-21-0229 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-22-0225 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-23-0221 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-24-0217 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-25-0214 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-26-0209 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-27-0206 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-28-0202 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-30-0154 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2024-12-31-0150 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-01-0146 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-02-0142 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-03-0138 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-05-0130 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-06-0126 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-08-0118 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-18-0039 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-19-0035 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-20-0031 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-21-0027 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-22-0024 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-23-0019 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-24-0015 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-25-0012 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-26-0008 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-27-0004 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-28-0000 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-01-28-2356 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-01-2340 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-02-2336 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-03-2332 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-04-2328 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-05-2324 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-06-2320 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-07-2317 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-08-2313 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-09-2309 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-10-2305 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-11-2301 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-12-2257 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-13-2253 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-14-2249 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-15-2245 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-16-2241 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-17-2237 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-19-2230 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-20-2225 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-21-2221 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-22-2218 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-23-2214 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-24-2210 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-25-2206 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-26-2202 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-27-2158 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-02-28-2154 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-01-2150 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-02-2146 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-03-2142 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-04-2138 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-05-2134 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-06-2130 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-07-2126 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-08-2122 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-09-2118 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-10-2115 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-11-2111 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-12-2107 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-13-2103 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-15-2055 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-16-2051 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-17-2047 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-18-2043 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-19-2039 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-20-2035 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-21-2031 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-22-2028 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-23-2024 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-25-2016 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-26-2012 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-27-2008 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-28-2004 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-29-2000 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-30-1956 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-03-31-1952 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-01-1948 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-02-1944 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-03-1940 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-04-1937 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-05-1932 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-06-1928 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-07-1925 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-08-1921 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-10-1913 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-11-1909 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-12-1905 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-13-1901 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-14-1857 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-15-1853 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-16-1849 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-17-1845 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-18-1841 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-19-1837 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-20-1833 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-21-1830 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-23-1822 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-24-1818 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-25-1814 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-26-1810 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-27-1806 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-28-1802 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-29-1758 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-04-30-1754 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-01-1750 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-02-1746 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-03-1742 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-04-1739 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-05-1735 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-06-1731 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-07-1727 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-08-1723 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-09-1719 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-10-1715 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-11-1711 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-12-1707 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-13-1703 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-14-1659 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-15-1655 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-16-1651 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-17-1647 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-18-1643 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-19-1640 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-20-1636 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-21-1632 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-22-1628 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-23-1624 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-24-1620 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-25-1616 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-26-1612 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-27-1608 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-28-1604 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-29-1600 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-30-1556 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-05-31-1552 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-01-1548 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-02-1544 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-03-1541 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-04-1537 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-05-1533 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-06-1529 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-08-1521 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-09-1517 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-10-1513 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-11-1509 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-12-1505 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-13-1501 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-14-1457 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-15-1453 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-16-1449 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-17-1446 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-18-1442 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-19-1438 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-20-1434 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-21-1430 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-22-1426 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-23-1422 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-24-1418 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-25-1414 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-26-1410 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-27-1406 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-28-1402 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-29-1358 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-06-30-1354 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-01-1350 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-02-1347 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-03-1343 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-04-1339 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-05-1335 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-06-1331 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-07-1327 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-08-1323 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-09-1319 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-10-1315 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-11-1311 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-12-1307 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-13-1303 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-14-1259 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-15-1255 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-16-1251 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-17-1247 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-18-1243 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-19-1239 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-20-1236 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-21-1232 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-22-1228 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-23-1224 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-26-1212 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-27-1208 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-28-1204 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-29-1200 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-07-30-1156 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-01-1149 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-02-1145 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-03-1141 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-04-1137 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-05-1133 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-06-1129 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-07-1125 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-08-1121 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-09-1117 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-10-1113 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-11-1109 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-12-1105 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-13-1101 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-14-1058 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-15-1053 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-16-1050 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-17-1045 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-18-1042 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-19-1038 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-20-1034 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-21-1030 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-22-1026 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-23-1022 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-24-1018 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-25-1014 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-26-1010 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-27-1006 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-28-1002 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-29-0958 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-30-0954 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-08-31-0950 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-01-0947 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-02-0943 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-03-0939 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-04-0935 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-05-0931 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-06-0927 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-07-0923 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-10-0911 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-11-0907 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-12-0903 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-13-0859 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-14-0856 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-15-0852 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-16-0848 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-17-0844 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-18-0840 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
+python anaPulsar.py -b 2025-09-19-0836 -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200
