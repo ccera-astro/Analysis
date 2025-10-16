@@ -38,7 +38,7 @@ for file in files :
         if not metadata['target']  == 'J0332+5434' : continue 
     else :
         if not metadata['run_mode'] == 'doppler' : continue 
-        if not metadata['target']  == 'galaxy_v2' : continue 
+        if not metadata['target']  == 'galaxy' : continue 
 
     print("   good file={0:s}".format(file))
     os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file,data_dir))
