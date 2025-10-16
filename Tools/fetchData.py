@@ -33,12 +33,17 @@ for file in files :
     if tt < start : continue 
     print("  check metadata")
     with open(file) as json_file : metadata = json.load(json_file)
+    print("file={0:s} run_mode={1:s} target={2:s}".format(file,metadata["run_mode"],metadata["target"]))
     if args.mode == "pulsar" :
         if not metadata['run_mode'] == 'pulsar' : continue 
         if not metadata['target']  == 'J0332+5434' : continue 
     else :
-        if not metadata['run_mode'] == 'doppler' : continue 
-        if not metadata['target']  == 'galaxy' : continue 
+        if not metadata['run_mode'] == 'h1' : 
+            print("Wrong run_mode")
+            continue 
+        if not metadata['target']  == 'galaxy' : 
+            print("Wrong target")
+            continue 
 
     print("   good file={0:s}".format(file))
     os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file,data_dir))
