@@ -38,12 +38,8 @@ for file in files :
         if not metadata['run_mode'] == 'pulsar' : continue 
         if not metadata['target']  == 'J0332+5434' : continue 
     else :
-        if not metadata['run_mode'] == 'h1' : 
-            print("Wrong run_mode")
-            continue 
-        if not metadata['target']  == 'galaxy' : 
-            print("Wrong target")
-            continue 
+        if not metadata['run_mode'] == 'h1' : continue 
+        if not metadata['target']  == 'galaxy' : print("Wrong target")
 
     print("   good file={0:s}".format(file))
     os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file,data_dir))
@@ -51,5 +47,5 @@ for file in files :
         os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_1.sum"),data_dir))
         os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_2.sum"),data_dir))
     else :
-        os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_1.avg"),data_dir))
-        os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_2.avg"),data_dir))
+        os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_1.raw"),data_dir))
+        os.system("ln -s {0:s} {1:s}temp_soft_link/.".format(file.replace(".json","_2.raw"),data_dir))
