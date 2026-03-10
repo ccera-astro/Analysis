@@ -8,6 +8,7 @@ def getArgs() :
     parser = argparse.ArgumentParser()
     parser.add_argument("-s","--start",default="2024-12-10",help="start date")
     parser.add_argument("--search",default="",help="search term")
+    parser.add_argument("--pass0_mode",action="store_true",help="select pass0 mode")
     return parser.parse_args()
 
 args = getArgs() 
@@ -28,7 +29,10 @@ for file in  files :
     if metadata['az'] > 1. and metadata['az'] < 359. : continue 
     if abs(metadata['alt'] - 80.8) > 1. : continue  
     print("   Good file: base_name={0:s}".format(base_name))
-    cmd = "python anaPulsar.py -b {0:s} -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200".format(base_name)
+    if args.pass0_mode :
+        cmd = "python anaPulsar.py -b {0:s} -m scan --no_plot --high_pass_off --no_roll --nPhaseBins 200".format(base_name)
+    else :
+        cmd = "python anaPulsar.py -b {0:s} -m phase --no_plot --high_pass_off --no_roll --nPhaseBins 200".format(base_name)
     outLines.append(cmd +"\n")
 
 open("runAnaPulsar.csh",'w').writelines(outLines)

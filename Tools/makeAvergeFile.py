@@ -26,7 +26,9 @@ def getFileName(args) :
     
     print("files = {0:s}".format(str(files)))
     for file in files : 
-        if "json" in file : base_names.append(file.strip(".json"))
+        #if "json" in file : base_names.append(file.strip(".json"))
+        if "json" in file :
+            base_names.append(file[:-5])
 
     print("\n\n base_names = {0:s}".format(str(base_names)))
     return base_names  
