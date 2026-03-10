@@ -120,7 +120,7 @@ if True :
 
 power = powers[chan-1]
 
-vMin, vMax = -300., 300.
+vMin, vMax = -200., 200.
 i1 = np.searchsorted(vDoppler,vMin)
 i2 = np.searchsorted(vDoppler,vMax)
 print("i1={0:d} i2={1:d}".format(i1,i2))
@@ -132,7 +132,7 @@ background = fitBackground(vDoppler,power,5,150.)
 subtract_background = True 
 if subtract_background : 
     plt.plot(vDoppler,power-background,'r.')
-    plt.plot([-300.,300.],[0., 0.],'g-')
+    plt.plot([-200.,200.],[0., 0.],'g-')
     yMax = np.max(power-background)
     plt.text(-200.,0.8*yMax,'Chan {0:d}'.format(chan))
 else :
