@@ -17,11 +17,10 @@ def getArgs() :
     parser.add_argument("--nPhaseBins",type=int,default=200,help="Number of bins in phase plot")
     parser.add_argument("-p","--phase_0",type=float,default=-1000.,help="Phase shift for reference data.")
     parser.add_argument("--plot",action="store_true",help="Plot results")
+    parser.add_argument("--print_level",type=int,default=1,help="Print level")
     parser.add_argument("--run_all",action="store_true",help="Plot results")
-    parser.add_argument("--dither",action="store_true",help="dither fitted phase by 0.1")
-    parser.add_argument("-m","--mode",default="polyco",help="Method used for initial freq:  polyco, H1, pass1, pass2")
-    parser.add_argument("--nSigma",type=float,default=5.0,help="Minimum SNR")
-    parser.add_argument("--n_files",type=int,default=999999,help="Maximum number of files to analyze")
+    parser.add_argument("-m","--mode",default="pass1",help="Method used for initial freq:  polyco, H1, pass1, pass2")
+    parser.add_argument("--nSigma",type=float,default=4.25,help="Minimum SNR")
     return parser.parse_args()  
 
 def getData(base_name) :
@@ -113,7 +112,7 @@ def anaPolyco(args, base_name, data) :
 
     return p, 1./p, s, sa
 
-def anaf0(args, base_name, data, f, phase_offset) :
+def anaf0(args, base_name, data, f, phase_offset, printOn=False) :
     # read or calculate various run parameters 
     c_rate = data['srate']/data['fft_size']/data['decimation_factor'] 
     t_fft = 1./c_rate 
@@ -131,7 +130,8 @@ def anaf0(args, base_name, data, f, phase_offset) :
     ph = np.divide(bdata,bnum)
     sa = getSigmaArray(ph)
      
-    amp, mean, sigma, mean_err  = fitPhase.fitPhasePlot(sa) 
+    if printOn : print("   In anaf0(): base_name={0:s}".format(base_name))
+    amp, mean, sigma, mean_err  = fitPhase.fitPhasePlot(sa,printOn=printOn) 
 
     return sa, mean, mean_err 
 
@@ -164,6 +164,7 @@ def getScanFreq(args, base_name, data) :
     
     if args.mode.lower() == 'pass1' :
         MJD0, e, coslat, perihelion = 6.08239457e+04, 2.19226138e-02, 8.19508363e-01, 2.41564142e+02
+        MJD0, e, coslat, perihelion = 6.08226873e+04, 1.42094405e-02, 8.26221319e-01, 2.27098482e+02  # from best freq fits 
         vx = orbit_function_3(MJD, MJD0, e, coslat, perihelion)
     elif args.mode.lower() == 'h1' :
         offset, MJD0, e, coslat, perihelion = 1.31850274e-01, 6.08203485e+04, 1.64021937e-02, 8.27603619e-01, 2.07466866e+02
@@ -191,20 +192,23 @@ def extrapolatePhase(args) :
     if tgt_data['t_start'] % 1. > 0.45 and tgt_data['t_start'] < 1745604855. : 
         tgt_data['t_start'] += 1.
 
-    print("ref_base_name={0:s} \ntgt_base_name={1:s}".format(ref_base_name,tgt_base_name))
+    if args.print_level > 1 : print("ref_base_name={0:s} \ntgt_base_name={1:s}".format(ref_base_name,tgt_base_name))
     
     f_ref = getScanFreq(args, ref_base_name, ref_data)
     f_tgt = getScanFreq(args, tgt_base_name, tgt_data)
         
-    sigma_array, ref_phase, phase_err_ref  = anaf0(args, ref_base_name, ref_data, f_ref, 0.)
+    printOn = args.print_level > 1 
+    if printOn : print("In extraplolatePhase() reference = {0:s}".format(ref_base_name))
+    sigma_array, ref_phase, phase_err_ref  = anaf0(args, ref_base_name, ref_data, f_ref, 0., printOn=printOn)
 
     # extrapolate to target 
-    print("In extrapolatePhase(): f_ref={0:.9f} f_tgt={1:.9f}".format(f_ref,f_tgt))
+    if printOn : print("In extrapolatePhase(): f_ref={0:.9f} f_tgt={1:.9f}".format(f_ref,f_tgt))
     f_avg = 0.5*(f_ref+f_tgt) 
     dt = tgt_data['t_start'] - ref_data['t_start']
     tgt_phase = f_avg*dt - ref_phase
 
-    sigma_array, phase_peak, phase_err_tgt  = anaf0(args, tgt_base_name, tgt_data, f_tgt, tgt_phase)
+    if printOn : print("In extraplolatePhase()    target = {0:s}".format(tgt_base_name))
+    sigma_array, phase_peak, phase_err_tgt  = anaf0(args, tgt_base_name, tgt_data, f_tgt, tgt_phase, printOn=printOn)
     phase_err = sqrt(phase_err_ref*phase_err_ref + phase_err_tgt*phase_err_tgt)
     
     if args.plot : 
@@ -230,7 +234,7 @@ def extrapolatePhase(args) :
         axs2.plot([-0.5,0.5],[0.,0.],'k--')
         axs2.set_xlim(-0.5,0.5)
         plt.show()
-    print("\n") 
+    if args.print_level > 1 : print("\n") 
     return phase_peak, phase_err, f_avg   
 
 def MJD_to_unix(MJD) : return 86400.*(MJD-40587.)
@@ -244,14 +248,18 @@ if __name__ == "__main__":
         files = glob.glob("./outputs/*.json")
         print("len(files)={0:d}".format(len(files)))
            
-        lhead = "   reference        target       dPhi      f_avg     f_corr (nHz)   f_err (nHz) days\n"
+        lhead = "   reference        target       dPhi      f_avg     f_corr (nHz)   f_err (nHz) days"
         outlines, MJD_lines = [lhead], []
         ref_file = files[0]
         args.ref = ref_file.split("/")[-1].replace("_out.json","")
         nDays = 1  # Maximum number of days between reference and target
         if args.mode.lower() == "h1" : nDays = 2  
         if args.mode.lower() in ["polyco","pass2"] : nDays = 5
-        for i in range(1,min(args.n_files,len(files))) :
+        print_count = 20 
+        for i in range(1,len(files)) :
+            if args.print_level > 0 and print_count == 20 : 
+                print(lhead)
+                print_count = 0 
             tgt_file = files[i]
             #print("i={0:3d} ref_file={1:s} tgt_file={2:s}".format(i,ref_file,tgt_file))
             if tgt_file == "./outputs/2025-01-28-2356_out.json" : continue 
@@ -264,28 +272,24 @@ if __name__ == "__main__":
             args.tgt = tgt_file.split("/")[-1].replace("_out.json","")
             t_tgt = tgt_data["t_start"] 
             #print("ref: {0:s} tgt: {1:s}".format(args.ref,args.tgt))
-            print("best_sigma: ref={0:7.2f} tgt={1:7.2f}  dT={2:7.2f}".format(
+            if args.print_level > 1 : print("best_sigma: ref={0:7.2f} tgt={1:7.2f}  dT={2:7.2f}".format(
                 ref_data["best_sigma"],tgt_data["best_sigma"],(t_tgt - t_ref)/86400.))
             # if the target signal is too weak, move on to the next one, keeping the same reference 
             if tgt_data["best_sigma"] < args.nSigma : continue 
             if t_tgt - t_ref < 86400.*nDays :
-                dPhi, phi_err, f_avg = extrapolatePhase(args)
-                if args.dither :
-                    dPhi = dPhi + random.gauss(0.,0.1)
-                    if dPhi < -0.5 : dPhi += 1.
-                    if dPhi >  0.5 : dPhi -= 1. 
+                dPhi, phase_err, f_avg = extrapolatePhase(args)
                 f_corr = dPhi/(t_tgt-t_ref)
-                ref_timing_error = 1.e-6*(1260. - 58.3*ref_data["best_sigma"])
-                tgt_timing_error = 1.e-6*(1260. - 58.3*tgt_data["best_sigma"])
-                timing_error = sqrt(ref_timing_error**2 + tgt_timing_error**2)   
-                f_err = (timing_error/(t_tgt-t_ref))*f_avg
+                # estimate phase error from the phase histogram fits 
+                f_err = phase_err/(t_tgt-t_ref) 
                 t_avg = 0.5*(t_ref + t_tgt)
                 MJD_avg = unix_to_MJD(t_avg)
                 MJD_lines += "{0:15.6f} {1:13.10f} {2:13.10f}\n".format(MJD_avg,f_avg-f_corr,f_err)
                 ll = "{0:s} {1:s} {2:6.3f} {3:12.9f} {4:12.1f} {5:12.1f} {6:6.2f}\n".format(
                     args.ref,args.tgt,dPhi, f_avg, 1.e9*f_corr, 1.e9*f_err, (t_tgt-t_ref)/86400.)
                 outlines += ll 
-                print(lhead + ll)
+                #print(lhead + ll)
+                print(ll.strip())
+                print_count += 1 
             # use existing target as new reference 
             ref_file = files[i]
 
@@ -297,6 +301,6 @@ if __name__ == "__main__":
         tgt_json = "./outputs/{0:s}_out.json".format(args.tgt)
         with open(tgt_json) as json_file : tgt_data = json.load(json_file)
         print("  best_sigma: ref={0:6.2f} tgt={1:6.2f}".format(ref_data["best_sigma"],tgt_data["best_sigma"]))
-        dPhi, phi_err, f_avg = extrapolatePhase(args)
+        dPhi, phase_err, f_avg = extrapolatePhase(args)
         print("ref={0:s} tgt={1:s} dPhi={2:.5f} +/- {3:.5f} f_avg={4:.8f}".format(
-            args.ref,args.tgt,dPhi,phi_err,f_avg))
+            args.ref,args.tgt,dPhi,phase_err,f_avg))

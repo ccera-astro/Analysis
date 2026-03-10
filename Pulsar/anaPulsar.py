@@ -9,6 +9,7 @@ import runPolyco as rp
 import scipy.stats as stats
 import time 
 import fitPhase
+import fitPeriodScan 
 
 from astropy.time import Time
 from pint.models import get_model
@@ -187,9 +188,6 @@ def writeResults(results,file_base_name) :
         json.dump(results, fp)
     return
 
-
-
-
 # begin execution here
 
 args = getArgs() 
@@ -236,14 +234,11 @@ pts_2 = 1000*np.fromfile(base_name + "_2.sum", dtype=np.float32)
 if len(pts_1) > len(pts_2) : pts_1 = pts_1[:len(pts_2)]
 if len(pts_2) > len(pts_1) : pts_2 = pts_2[:len(pts_1)]
 power_time_series = pts_1 + pts_2 
-#power_time_series = pts_1
 
 results['raw_mean'] = float(np.average(power_time_series))
 results['raw_sigma'] = float(np.std(power_time_series))
 results['noise_temperature'] = gain*results['raw_mean'] 
 
-#n_downsample = int(0.10/t_fft) 
-#print("t_fft={0:e} n_downsample={1:d}".format(t_fft,n_downsample))
 if n_downsample > 1 : power_time_series = downSample(power_time_series,n_downsample)
 nRows = len(power_time_series) 
 
@@ -336,6 +331,7 @@ else :
     print("In scan: p0={0:f}".format(p0))
     nPeriods, nBins = args.nPeriods, args.nPhaseBins 
     periods = np.linspace(p0*(1.-args.eps),p0*(1.+args.eps),nPeriods)
+    periodScan = np.zeros_like(periods)
     mapData = np.zeros((nPeriods,nBins))   
     best_sigma = 0. 
     for i, period in enumerate(periods) :
@@ -347,6 +343,7 @@ else :
         else :
             mapData[i] = sigma_array 
         this_sigma = np.max(sigma_array)
+        periodScan[i] = this_sigma 
         best_string = ""
         
         if  this_sigma > best_sigma :
@@ -362,6 +359,7 @@ else :
 
     results["best_sigma"] = float(best_sigma)
     results['period'] = best_period 
+
     fig = plt.figure(figsize=(10.,7.5))
     ax = fig.add_subplot(111)
     ax.set_title("S/N: {0:s}  Best Period={1:.4f} ms".format(metadata['target'],1000.*best_period),size=14)
@@ -397,8 +395,12 @@ ncp1, ncm1 = (nc+1) % len(best_sigma_array), (nc-1)
 bsa = best_sigma_array
 
 amp, mean, sigma, mean_err  = fitPhase.fitPhasePlot(bsa) 
-print("amp={0:8.2f} sigma={1:8.5f} mean={2:8.5f} +/- {3:.5f}".format(amp,sigma,mean,mean_err))
+print("Phase fit results: amp={0:8.2f} sigma={1:8.5f} mean={2:8.5f} +/- {3:.5f}".format(amp,sigma,mean,mean_err))
 
+amp, mean, sigma, base, mean_err = fitPeriodScan.fitPeriodScan(periods,periodScan, printOn=False, plotOn=False ) 
+print("Period fit results: amp={0:.2f} mean={1:.6f} +/- {2:.6f} ms   sigma={3:.2f} us  base={4:.2f}".format(
+            amp, 1000.*mean,1000.*mean_err,1.0e6*sigma,base))
+results['best_fit_freq'], results['best_fit_freq_err'] = 1./mean, mean_err/mean**2  
 
 time_offset = mean*best_period 
 f0 = 1./best_period
@@ -409,7 +411,6 @@ results['TOA1'], results['TOA2']  = int(TOA), TOA - int(TOA)
 
 dx = 0.5/nBins
 x = np.linspace(-0.5+dx,0.5-dx,nBins)
-#x = np.linspace(0.,1.,nPoints)
 x_err = np.zeros_like(x)
 y_err = np.ones_like(best_sigma_array)
 fig2, axs2 = plt.subplots(figsize=(8,7))
@@ -428,9 +429,7 @@ plt.xlabel("Phase",fontsize=16)
 plt.title("{0:s}".format(args.base_name, fontsize=14))
 bs = max(best_sigma_array)
 
-if True :
-    #print("results={0:s}".format(str(results))) 
-    writeResults(results,base_name)
+writeResults(results,base_name)
 
 ymin, ymax = plt.ylim() 
 dy = ymax - ymin 
