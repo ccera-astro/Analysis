@@ -133,7 +133,7 @@ for file in files :
             print("File {0:s} does not exist . . . skipping".format(in_file))
             continue 
         data, nRows, nCols = getData(in_file,metadata['fft_size'])
-        print("Read {0:d} {1:d}-channel spectra from {2:s}".format(nRows,nCols,in_file))
+        
         #print("Before roll:")
         #print_file(data,10,10)
         
@@ -144,5 +144,5 @@ for file in files :
         #out_file = in_file.replace(".raw",".dsp")
         out_file = args.data_dir + "dsp/" + base_name + "_{0:d}".format(chan) + ".dsp" 
         power = np.sum(data,1)
-        print("outfile={0:s}".format(out_file))
+        print("Read {0:d} {1:d}-channel spectra from {2:s}.  Writing to: {3:s}".format(nRows,nCols,in_file,out_file))
         with open(out_file,'w') as ff : power.tofile(ff)
