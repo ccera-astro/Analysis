@@ -31,13 +31,13 @@ def getDelays(meta_data) :
     dF = 1.e-6*meta_data['srate']
     fMin = f0 - 0.5*dF
     fMax = f0 + 0.5*dF
-    print("getDelays: fMin={0:e} fMax={1:e}".format(fMin,fMax))
+    #print("getDelays: fMin={0:e} fMax={1:e}".format(fMin,fMax))
     freqs = np.linspace(fMin,fMax,meta_data['fft_size'])
     DM = 26.7641          # pc cm^-3, approximate ATNF value for J0332+5434
     # Cold-plasma dispersion formula: Delta t(ms) = K_DM * DM * (1/f1^2 - 1/f2^2), with f in MHz
     K_DM = 4.148808e6     # ms MHz^2 pc^-1 cm^3
     delays  = 0.001* K_DM * DM * (1.0/f0**2 - 1.0/freqs**2)  # delay time in seconds 
-    print("dts={0:s}".format(str(delays)))
+    #print("dts={0:s}".format(str(delays)))
     if False :
         import matplotlib.pyplot as plt 
         plt.plot(freqs,1.e6*delays,'b-')
@@ -134,12 +134,12 @@ for file in files :
             continue 
         data, nRows, nCols = getData(in_file,metadata['fft_size'])
         print("Read {0:d} {1:d}-channel spectra from {2:s}".format(nRows,nCols,file))
-        print("Before roll:")
-        print_file(data,10,10)
+        #print("Before roll:")
+        #print_file(data,10,10)
         
         data = roll_columns(data, rolls)
-        print("After roll:")
-        print_file(data,10,10)
+        #print("After roll:")
+        #print_file(data,10,10)
 
         #out_file = in_file.replace(".raw",".dsp")
         out_file = args.data_dir + "dsp/" + base_name + "_{0:d}".format(chan) + ".dsp" 
