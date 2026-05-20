@@ -19,7 +19,7 @@ def getArgs() :
     return parser.parse_args()
 
 def getData(file,fft_size) :
-    print("Reading from file: {0:s}".format(file))
+    #print("Reading from file: {0:s}".format(file))
     vals = np.fromfile(file, dtype=np.float32)
     cols = fft_size
     rows = int(len(vals)/fft_size)
@@ -120,20 +120,20 @@ print("files={0:s}".format(str(files)))
 
 for file in files :
     base_name = file.split("/")[-1]
-    print("base_name={0:s}".format(base_name)) 
+    #print("base_name={0:s}".format(base_name)) 
     with open(file+".json") as json_file : metadata = json.load(json_file)
     delays = getDelays(metadata)
     delays *= args.roll_mult 
     rolls = np.round(delays/metadata["t_sample"]).astype(int)
-    print("rolls={0:s}".format(str(rolls)))
-    print("t_sample={0:.3f} us".format(1.e6*metadata["t_sample"]))
+    #print("rolls={0:s}".format(str(rolls)))
+    #print("t_sample={0:.3f} us".format(1.e6*metadata["t_sample"]))
     for chan in [1,2] :
         in_file = file + "_{0:d}.raw".format(chan)
         if not os.path.exists(in_file) :
             print("File {0:s} does not exist . . . skipping".format(in_file))
             continue 
         data, nRows, nCols = getData(in_file,metadata['fft_size'])
-        print("Read {0:d} {1:d}-channel spectra from {2:s}".format(nRows,nCols,file))
+        print("Read {0:d} {1:d}-channel spectra from {2:s}".format(nRows,nCols,in_file))
         #print("Before roll:")
         #print_file(data,10,10)
         
